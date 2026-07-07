@@ -10,16 +10,35 @@ type Lift = { id: number; text: string }
 
 type Exercise = { name: string; sets: string; done: boolean }
 
-const DUMBBELL_ROUTINE: Omit<Exercise, 'done'>[] = [
+// Mon / Wed / Fri — Push & Legs (compound focus)
+const PUSH_LEGS: Omit<Exercise, 'done'>[] = [
   { name: 'Goblet Squats', sets: '3×12' },
   { name: 'Dumbbell Bench Press', sets: '3×10' },
-  { name: 'Bent-Over Rows', sets: '3×10' },
   { name: 'Overhead Press', sets: '3×10' },
   { name: 'Romanian Deadlifts', sets: '3×12' },
-  { name: 'Bicep Curls', sets: '3×12' },
-  { name: 'Tricep Kickbacks', sets: '3×12' },
   { name: 'Lateral Raises', sets: '3×15' },
+  { name: 'Tricep Kickbacks', sets: '3×12' },
 ]
+
+// Tue / Thu — Pull & Arms (back and biceps focus)
+const PULL_ARMS: Omit<Exercise, 'done'>[] = [
+  { name: 'Bent-Over Rows', sets: '3×10' },
+  { name: 'Single-Arm Rows', sets: '3×10' },
+  { name: 'Reverse Flyes', sets: '3×15' },
+  { name: 'Hammer Curls', sets: '3×12' },
+  { name: 'Bicep Curls', sets: '3×12' },
+  { name: 'Shrugs', sets: '3×15' },
+]
+
+function getTodayRoutine(): { exercises: Omit<Exercise, 'done'>[]; label: string } {
+  const dow = new Date().getDay() // 0=Sun, 1=Mon...
+  // Mon(1), Wed(3), Fri(5) = Push & Legs
+  // Tue(2), Thu(4) = Pull & Arms
+  if (dow === 1 || dow === 3 || dow === 5) {
+    return { exercises: PUSH_LEGS, label: 'Push & Legs' }
+  }
+  return { exercises: PULL_ARMS, label: 'Pull & Arms' }
+}
 
 export function FitnessSection({
   shower,
@@ -30,9 +49,12 @@ export function FitnessSection({
 }) {
   const [draft, setDraft] = useState('')
   const [lifts, setLifts] = useLocalStorage<Lift[]>('lifts', [])
+
+  const { exercises: todayExercises, label: routineLabel } = getTodayRoutine()
+
   const [routine, setRoutine] = useLocalStorage<Exercise[]>(
     'dumbbell-routine',
-    DUMBBELL_ROUTINE.map((e) => ({ ...e, done: false }))
+    todayExercises.map((e) => ({ ...e, done: false }))
   )
 
   const addLift = () => {
@@ -51,17 +73,20 @@ export function FitnessSection({
 
   return (
     <div className="grid gap-3">
-      {/* 20-min dumbbell routine */}
+      {/* Daily dumbbell routine */}
       <div className="rounded-lg border border-border/60 bg-secondary/40 p-3">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 text-sm font-medium text-foreground">
             <Timer className="size-4 text-primary" />
-            20-Min Dumbbell Routine
+            20-Min Dumbbell — {routineLabel}
           </div>
           <span className="rounded-full bg-primary/15 px-2.5 py-0.5 font-mono text-xs text-primary">
             {completedCount}/{routine.length}
           </span>
         </div>
+        <p className="mt-1 text-xs text-muted-foreground">
+          {routineLabel === 'Push & Legs' ? 'Mon · Wed · Fri' : 'Tue · Thu'}
+        </p>
         <ul className="mt-3 grid gap-1.5">
           {routine.map((exercise, i) => (
             <li key={i}>
