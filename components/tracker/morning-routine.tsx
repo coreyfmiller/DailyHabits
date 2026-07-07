@@ -51,7 +51,7 @@ export function MorningRoutine({
         hint="Morning fuel"
       />
 
-      <SupplementChecklist />
+      <SupplementChecklist time="morning" />
 
       <RecurringTasksChecklist />
 

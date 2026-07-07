@@ -38,7 +38,7 @@ import { WeeklyView } from './tracker/weekly-view'
 import { WorkBlock } from './tracker/work-block'
 import { formatTimeOfDay, useNow } from './tracker/use-now'
 import { WaterTracker } from './tracker/water-tracker'
-import { SupplementManager } from './tracker/supplement-tracker'
+import { SupplementManager, SupplementChecklist } from './tracker/supplement-tracker'
 
 /** Determine which time block is active based on current minutes */
 function getActiveBlock(minutesNow: number, isWeekend: boolean) {
@@ -236,6 +236,8 @@ function WeekdayTimeline({ coffee, onToggleCoffee, shower, onToggleShower, walke
         <FitnessSection shower={shower} onToggleShower={onToggleShower} />
       </TimelineRow>
 
+      <SupplementChecklist time="midday" />
+
       <TimelineRow
         icon={Briefcase}
         time="1:00 PM – 5:00 PM"
@@ -276,6 +278,8 @@ function WeekdayTimeline({ coffee, onToggleCoffee, shower, onToggleShower, walke
       >
         <FamilyTime walkedWithFamily={walkedWithFamily} onToggleWalk={onToggleWalk} />
       </TimelineRow>
+
+      <SupplementChecklist time="evening" />
 
       <TimelineRow
         icon={Footprints}
