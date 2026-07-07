@@ -3,11 +3,6 @@
 import { Flame } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
-type MealEntry = {
-  id: number
-  estimatedCalories: number | null
-}
-
 function todayKey() {
   const d = new Date()
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
@@ -21,11 +16,35 @@ function getCalories(): number {
     try {
       const raw = localStorage.getItem(`${prefix}:${slot}`)
       if (raw) {
-        const entries: MealEntry[] = JSON.parse(raw)
-        total += entries.reduce((sum, e) => sum + (e.estimatedCalories ?? 0), 0)
+        const entries = JSON.parse(raw)
+        if (Array.isArray(entries)) {
+          for (const e of entries) {
+            if (e && typeof e.estimatedCalories === 'number' && e.estimatedCalories > 0) {
+              total += e.estimatedCalories
+            }
+          }
+        }
       }
     } catch {}
   }
+
+  // Also check the old 'meals' key in case data is stored there from before the split
+  try {
+    const oldRaw = localStorage.getItem(`${prefix}:meals`)
+    if (oldRaw) {
+      const entries = JSON.parse(oldRaw)
+      if (Array.isArray(entries)) {
+        for (const e of entries) {
+          if (e && typeof e.estimatedCalories === 'number' && e.estimatedCalories > 0) {
+            total += e.estimatedCalories
+          }
+        }
+      }
+      // Clean up old key to prevent double-counting
+      localStorage.removeItem(`${prefix}:meals`)
+    }
+  } catch {}
+
   return total
 }
 
@@ -33,10 +52,7 @@ export function CalorieCounter() {
   const [total, setTotal] = useState(0)
 
   useEffect(() => {
-    // Initial read
     setTotal(getCalories())
-
-    // Poll every 2 seconds to pick up changes from other components
     const id = setInterval(() => setTotal(getCalories()), 2000)
     return () => clearInterval(id)
   }, [])
