@@ -9,11 +9,11 @@ import { HabitCheckbox } from './primitives'
 type Lift = { id: number; text: string }
 
 export function FitnessSection({
-  gymShower,
-  onToggleGymShower,
+  shower,
+  onToggleShower,
 }: {
-  gymShower: boolean
-  onToggleGymShower: (v: boolean) => void
+  shower: boolean
+  onToggleShower: (v: boolean) => void
 }) {
   const [draft, setDraft] = useState('')
   const [lifts, setLifts] = useLocalStorage<Lift[]>('lifts', [])
@@ -71,8 +71,8 @@ export function FitnessSection({
       </div>
 
       <HabitCheckbox
-        checked={gymShower}
-        onChange={onToggleGymShower}
+        checked={shower}
+        onChange={onToggleShower}
         label="Post-workout shower"
         hint="Rinse off & refresh"
       />

@@ -8,7 +8,7 @@ import { ProgressBar } from './primitives'
 import { formatTimeOfDay, useNow } from './use-now'
 
 const WORK_START_MIN = 8 * 60 + 30 // 8:30 AM
-const WORK_END_MIN = 17 * 60 // 5:00 PM
+const WORK_END_MIN = 18 * 60 // 6:00 PM
 
 export function WorkBlock() {
   const now = useNow(30_000)

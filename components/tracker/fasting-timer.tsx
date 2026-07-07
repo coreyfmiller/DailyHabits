@@ -9,13 +9,13 @@ import { formatClock, formatTimeOfDay, useNow } from './use-now'
 
 const GOAL_HOURS = 16 // target overnight fast
 
-/** Shared fasting state. Fast begins at 5:00 PM (the eating hard stop). */
+/** Shared fasting state. Fast begins at 6:00 PM (the eating hard stop). */
 export function useFast() {
   const now = useNow(1000)
 
   const defaultStart = (() => {
     const d = new Date()
-    d.setHours(17, 0, 0, 0) // 5:00 PM today
+    d.setHours(18, 0, 0, 0) // 6:00 PM today
     return d.toISOString()
   })()
 

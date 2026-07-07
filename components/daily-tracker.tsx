@@ -25,7 +25,6 @@ export function DailyTracker() {
 
   const [shower, setShower] = useLocalStorage('shower', false)
   const [coffee, setCoffee] = useLocalStorage('coffee', false)
-  const [gymShower, setGymShower] = useLocalStorage('gym-shower', false)
 
   const today = now.toLocaleDateString([], {
     weekday: 'long',
@@ -58,16 +57,14 @@ export function DailyTracker() {
           accent="primary"
         >
           <MorningRoutine
-            shower={shower}
             coffee={coffee}
-            onToggleShower={setShower}
             onToggleCoffee={setCoffee}
           />
         </TimelineRow>
 
         <TimelineRow
           icon={Briefcase}
-          time="8:30 AM – 5:00 PM"
+          time="8:30 AM – 6:00 PM"
           title="Professional Work"
           subtitle="Deep, focused work until the hard stop."
           accent="primary"
@@ -77,18 +74,18 @@ export function DailyTracker() {
 
         <TimelineRow
           icon={Dumbbell}
-          time="Afternoon"
+          time="Lunch Break"
           title="Fitness"
           subtitle="Weight training and recovery."
           accent="primary"
         >
-          <FitnessSection gymShower={gymShower} onToggleGymShower={setGymShower} />
+          <FitnessSection shower={shower} onToggleShower={setShower} />
         </TimelineRow>
 
-        {/* 5 PM HARD STOP */}
+        {/* 6 PM HARD STOP */}
         <TimelineRow
           icon={OctagonAlert}
-          time="5:00 PM"
+          time="6:00 PM"
           title="Hard Stop"
           accent="destructive"
         >
@@ -105,7 +102,7 @@ export function DailyTracker() {
 
         <TimelineRow
           icon={Users}
-          time="5:00 PM – 7:00 PM"
+          time="6:00 PM – 8:00 PM"
           title="Family Time"
           subtitle="Be present. Log what you did together."
           accent="primary"
@@ -115,7 +112,7 @@ export function DailyTracker() {
 
         <TimelineRow
           icon={Flame}
-          time="Starts 5:00 PM"
+          time="Starts 6:00 PM"
           title="Fasting Timer"
           subtitle="Counting up since your last meal."
           accent="primary"
