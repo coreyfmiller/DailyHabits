@@ -25,7 +25,6 @@ import { EveningWalk } from './tracker/evening-walk'
 import { FamilyTime } from './tracker/family-time'
 import { FitnessSection } from './tracker/fitness-section'
 import { MealTabs } from './tracker/meal-tabs'
-import { MealLog } from './tracker/meal-log'
 import { MorningRoutine } from './tracker/morning-routine'
 import { ThemeToggle } from './tracker/theme-toggle'
 import { TimelineRow } from './tracker/timeline-row'
@@ -280,6 +279,15 @@ function WeekendTimeline({ coffee, onToggleCoffee, walkedWithFamily, onToggleWal
   walkedWithFamily: boolean
   onToggleWalk: (v: boolean) => void
 }) {
+  const now = useNow(60_000)
+  const min = now.getHours() * 60 + now.getMinutes()
+
+  const s = (start: number, end: number): 'past' | 'active' | 'future' => {
+    if (min >= end) return 'past'
+    if (min >= start) return 'active'
+    return 'future'
+  }
+
   return (
     <section aria-label="Weekend timeline">
       <TimelineRow
@@ -288,18 +296,20 @@ function WeekendTimeline({ coffee, onToggleCoffee, walkedWithFamily, onToggleWal
         title="Morning Routine"
         subtitle="Easy start — coffee and set intentions."
         accent="primary"
+        status={s(6 * 60 + 30, 7 * 60)}
       >
         <MorningRoutine coffee={coffee} onToggleCoffee={onToggleCoffee} />
       </TimelineRow>
 
       <TimelineRow
         icon={Utensils}
-        time="Breakfast"
-        title="Breakfast"
-        subtitle="Eating window opens at 10 AM."
+        time="10:00 AM – 6:00 PM"
+        title="Meals"
+        subtitle="Eating window. Log breakfast, lunch, and supper."
         accent="primary"
+        status={s(10 * 60, 18 * 60)}
       >
-        <MealLog mealSlot="breakfast" />
+        <MealTabs />
       </TimelineRow>
 
       <TimelineRow
@@ -308,18 +318,9 @@ function WeekendTimeline({ coffee, onToggleCoffee, walkedWithFamily, onToggleWal
         title="Personal Work Block"
         subtitle="4 hours of deep work on your business."
         accent="primary"
+        status={s(6 * 60 + 30, 10 * 60 + 30)}
       >
         <WorkBlock id="weekend-morning" startMin={6 * 60 + 30} endMin={10 * 60 + 30} />
-      </TimelineRow>
-
-      <TimelineRow
-        icon={Utensils}
-        time="Lunch"
-        title="Lunch"
-        subtitle="Midday fuel."
-        accent="primary"
-      >
-        <MealLog mealSlot="lunch" />
       </TimelineRow>
 
       <TimelineRow
@@ -328,26 +329,17 @@ function WeekendTimeline({ coffee, onToggleCoffee, walkedWithFamily, onToggleWal
         title="Family Time"
         subtitle="Full afternoon with the family."
         accent="primary"
+        status={s(12 * 60, 20 * 60)}
       >
         <FamilyTime walkedWithFamily={walkedWithFamily} onToggleWalk={onToggleWalk} />
       </TimelineRow>
 
       <TimelineRow
-        icon={Utensils}
-        time="Supper"
-        title="Supper"
-        subtitle="Last meal before the fast."
-        accent="primary"
-      >
-        <MealLog mealSlot="supper" />
-      </TimelineRow>
-
-      {/* 6 PM eating window closes */}
-      <TimelineRow
         icon={OctagonAlert}
         time="6:00 PM"
         title="Eating Window Closes"
         accent="destructive"
+        status={s(18 * 60, 18 * 60 + 1)}
       >
         <div className="flex items-start gap-3 rounded-lg border border-destructive/40 bg-destructive/10 p-3">
           <OctagonAlert className="mt-0.5 size-5 shrink-0 text-destructive" />
@@ -366,6 +358,7 @@ function WeekendTimeline({ coffee, onToggleCoffee, walkedWithFamily, onToggleWal
         title="Daily Walk"
         subtitle="30–60 min. With family or solo."
         accent="primary"
+        status={s(18 * 60, 20 * 60)}
       >
         <EveningWalk walkedWithFamily={walkedWithFamily} />
       </TimelineRow>
@@ -376,6 +369,7 @@ function WeekendTimeline({ coffee, onToggleCoffee, walkedWithFamily, onToggleWal
         title="Movie Night"
         subtitle="Wind down together."
         accent="primary"
+        status={s(20 * 60, 22 * 60)}
         isLast
       >
         <div className="flex items-start gap-3 rounded-lg border border-border/60 bg-secondary/40 p-3">
@@ -395,6 +389,15 @@ function WeekdayMadelynTimeline({ coffee, onToggleCoffee, walkedWithFamily, onTo
   walkedWithFamily: boolean
   onToggleWalk: (v: boolean) => void
 }) {
+  const now = useNow(60_000)
+  const min = now.getHours() * 60 + now.getMinutes()
+
+  const s = (start: number, end: number): 'past' | 'active' | 'future' => {
+    if (min >= end) return 'past'
+    if (min >= start) return 'active'
+    return 'future'
+  }
+
   return (
     <section aria-label="Weekday with Madelyn">
       <TimelineRow
@@ -403,18 +406,20 @@ function WeekdayMadelynTimeline({ coffee, onToggleCoffee, walkedWithFamily, onTo
         title="Morning Routine"
         subtitle="Ease into the day with Madelyn."
         accent="primary"
+        status={s(6 * 60 + 30, 8 * 60 + 30)}
       >
         <MorningRoutine coffee={coffee} onToggleCoffee={onToggleCoffee} />
       </TimelineRow>
 
       <TimelineRow
         icon={Utensils}
-        time="Breakfast"
-        title="Breakfast"
-        subtitle="Breakfast together."
+        time="10:00 AM – 6:00 PM"
+        title="Meals"
+        subtitle="Eating window. Log meals together."
         accent="primary"
+        status={s(10 * 60, 18 * 60)}
       >
-        <MealLog mealSlot="breakfast" />
+        <MealTabs />
       </TimelineRow>
 
       <TimelineRow
@@ -423,28 +428,9 @@ function WeekdayMadelynTimeline({ coffee, onToggleCoffee, walkedWithFamily, onTo
         title="Work"
         subtitle="Day job while she's at school/activities."
         accent="primary"
+        status={s(8 * 60 + 30, 17 * 60)}
       >
         <WorkBlock id="afternoon" startMin={8 * 60 + 30} endMin={17 * 60} />
-      </TimelineRow>
-
-      <TimelineRow
-        icon={Utensils}
-        time="Lunch"
-        title="Lunch"
-        subtitle="Midday fuel."
-        accent="primary"
-      >
-        <MealLog mealSlot="lunch" />
-      </TimelineRow>
-
-      <TimelineRow
-        icon={Utensils}
-        time="Supper"
-        title="Supper"
-        subtitle="Dinner with Madelyn."
-        accent="primary"
-      >
-        <MealLog mealSlot="supper" />
       </TimelineRow>
 
       <TimelineRow
@@ -452,6 +438,7 @@ function WeekdayMadelynTimeline({ coffee, onToggleCoffee, walkedWithFamily, onTo
         time="6:00 PM"
         title="Eating Window Closes"
         accent="destructive"
+        status={s(18 * 60, 18 * 60 + 1)}
       >
         <div className="flex items-start gap-3 rounded-lg border border-destructive/40 bg-destructive/10 p-3">
           <OctagonAlert className="mt-0.5 size-5 shrink-0 text-destructive" />
@@ -470,6 +457,7 @@ function WeekdayMadelynTimeline({ coffee, onToggleCoffee, walkedWithFamily, onTo
         title="Madelyn Time"
         subtitle="All in — be present with her."
         accent="primary"
+        status={s(17 * 60, 20 * 60)}
       >
         <FamilyTime walkedWithFamily={walkedWithFamily} onToggleWalk={onToggleWalk} />
       </TimelineRow>
@@ -480,6 +468,7 @@ function WeekdayMadelynTimeline({ coffee, onToggleCoffee, walkedWithFamily, onTo
         title="Walk with Madelyn"
         subtitle="Get outside together."
         accent="primary"
+        status={s(17 * 60, 21 * 60)}
       >
         <EveningWalk walkedWithFamily={walkedWithFamily} />
       </TimelineRow>
@@ -490,6 +479,7 @@ function WeekdayMadelynTimeline({ coffee, onToggleCoffee, walkedWithFamily, onTo
         title="Wind Down"
         subtitle="Movie, show, or reading together."
         accent="primary"
+        status={s(20 * 60, 21 * 60)}
         isLast
       >
         <div className="flex items-start gap-3 rounded-lg border border-border/60 bg-secondary/40 p-3">
@@ -509,6 +499,15 @@ function WeekendMadelynTimeline({ coffee, onToggleCoffee, walkedWithFamily, onTo
   walkedWithFamily: boolean
   onToggleWalk: (v: boolean) => void
 }) {
+  const now = useNow(60_000)
+  const min = now.getHours() * 60 + now.getMinutes()
+
+  const s = (start: number, end: number): 'past' | 'active' | 'future' => {
+    if (min >= end) return 'past'
+    if (min >= start) return 'active'
+    return 'future'
+  }
+
   return (
     <section aria-label="Weekend with Madelyn">
       <TimelineRow
@@ -517,18 +516,20 @@ function WeekendMadelynTimeline({ coffee, onToggleCoffee, walkedWithFamily, onTo
         title="Morning Routine"
         subtitle="Easy start before she wakes up."
         accent="primary"
+        status={s(6 * 60 + 30, 7 * 60 + 30)}
       >
         <MorningRoutine coffee={coffee} onToggleCoffee={onToggleCoffee} />
       </TimelineRow>
 
       <TimelineRow
         icon={Utensils}
-        time="Breakfast"
-        title="Breakfast"
-        subtitle="Make breakfast together."
+        time="10:00 AM – 6:00 PM"
+        title="Meals"
+        subtitle="Eating window. Make meals together."
         accent="primary"
+        status={s(10 * 60, 18 * 60)}
       >
-        <MealLog mealSlot="breakfast" />
+        <MealTabs />
       </TimelineRow>
 
       <TimelineRow
@@ -537,28 +538,9 @@ function WeekendMadelynTimeline({ coffee, onToggleCoffee, walkedWithFamily, onTo
         title="Madelyn Day"
         subtitle="She's the priority. Be fully present."
         accent="primary"
+        status={s(7 * 60 + 30, 20 * 60)}
       >
         <FamilyTime walkedWithFamily={walkedWithFamily} onToggleWalk={onToggleWalk} />
-      </TimelineRow>
-
-      <TimelineRow
-        icon={Utensils}
-        time="Lunch"
-        title="Lunch"
-        subtitle="Lunch together."
-        accent="primary"
-      >
-        <MealLog mealSlot="lunch" />
-      </TimelineRow>
-
-      <TimelineRow
-        icon={Utensils}
-        time="Supper"
-        title="Supper"
-        subtitle="Dinner together."
-        accent="primary"
-      >
-        <MealLog mealSlot="supper" />
       </TimelineRow>
 
       <TimelineRow
@@ -566,6 +548,7 @@ function WeekendMadelynTimeline({ coffee, onToggleCoffee, walkedWithFamily, onTo
         time="6:00 PM"
         title="Eating Window Closes"
         accent="destructive"
+        status={s(18 * 60, 18 * 60 + 1)}
       >
         <div className="flex items-start gap-3 rounded-lg border border-destructive/40 bg-destructive/10 p-3">
           <OctagonAlert className="mt-0.5 size-5 shrink-0 text-destructive" />
@@ -584,6 +567,7 @@ function WeekendMadelynTimeline({ coffee, onToggleCoffee, walkedWithFamily, onTo
         title="Walk"
         subtitle="Get outside with Madelyn."
         accent="primary"
+        status={s(18 * 60, 21 * 60)}
       >
         <EveningWalk walkedWithFamily={walkedWithFamily} />
       </TimelineRow>
@@ -594,6 +578,7 @@ function WeekendMadelynTimeline({ coffee, onToggleCoffee, walkedWithFamily, onTo
         title="Movie Night"
         subtitle="Cozy up and watch something together."
         accent="primary"
+        status={s(20 * 60, 22 * 60)}
         isLast
       >
         <div className="flex items-start gap-3 rounded-lg border border-border/60 bg-secondary/40 p-3">
