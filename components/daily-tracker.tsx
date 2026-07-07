@@ -6,6 +6,7 @@ import {
   Dumbbell,
   Film,
   Footprints,
+  LayoutGrid,
   Laptop,
   OctagonAlert,
   Sunrise,
@@ -24,12 +25,13 @@ import { FitnessSection } from './tracker/fitness-section'
 import { MealLog } from './tracker/meal-log'
 import { MorningRoutine } from './tracker/morning-routine'
 import { TimelineRow } from './tracker/timeline-row'
+import { WeeklyView } from './tracker/weekly-view'
 import { WorkBlock } from './tracker/work-block'
 import { formatTimeOfDay, useNow } from './tracker/use-now'
 
 export function DailyTracker() {
   const now = useNow(1000)
-  const [view, setView] = useState<'timeline' | 'calendar'>('timeline')
+  const [view, setView] = useState<'timeline' | 'calendar' | 'weekly'>('timeline')
 
   const [shower, setShower] = useLocalStorage('shower', false)
   const [coffee, setCoffee] = useLocalStorage('coffee', false)
@@ -51,27 +53,33 @@ export function DailyTracker() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <button
             type="button"
-            onClick={() => view === 'calendar' && setView('timeline')}
-            className={view === 'calendar' ? 'cursor-pointer' : 'cursor-default'}
+            onClick={() => view !== 'timeline' && setView('timeline')}
+            className={view !== 'timeline' ? 'cursor-pointer' : 'cursor-default'}
           >
-            <h1 className="text-lg font-semibold tracking-tight text-foreground">Daily Rhythm</h1>
-            <p className="text-xs text-muted-foreground">
+            <h1 className="text-lg font-semibold tracking-tight text-foreground text-left">Daily Rhythm</h1>
+            <p className="text-xs text-muted-foreground text-left">
               {today} · {formatTimeOfDay(now)}
               {isWeekend && <span className="ml-2 rounded-full bg-primary/15 px-2 py-0.5 text-primary">Weekend</span>}
             </p>
           </button>
           <div className="flex items-center gap-2">
             <CalorieCounter />
-            {view === 'calendar' ? (
+            {view !== 'timeline' ? (
               <Button size="sm" variant="default" onClick={() => setView('timeline')}>
                 <X className="size-4" />
                 Close
               </Button>
             ) : (
-              <Button size="sm" variant="secondary" onClick={() => setView('calendar')}>
-                <Calendar className="size-4" />
-                Calendar
-              </Button>
+              <>
+                <Button size="sm" variant="secondary" onClick={() => setView('weekly')}>
+                  <LayoutGrid className="size-4" />
+                  Week
+                </Button>
+                <Button size="sm" variant="secondary" onClick={() => setView('calendar')}>
+                  <Calendar className="size-4" />
+                  Calendar
+                </Button>
+              </>
             )}
           </div>
         </div>
@@ -79,6 +87,8 @@ export function DailyTracker() {
 
       {view === 'calendar' ? (
         <CalendarView />
+      ) : view === 'weekly' ? (
+        <WeeklyView />
       ) : isWeekend ? (
         <WeekendTimeline coffee={coffee} onToggleCoffee={setCoffee} walkedWithFamily={walkedWithFamily} onToggleWalk={setWalkedWithFamily} />
       ) : (
