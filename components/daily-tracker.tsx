@@ -3,7 +3,6 @@
 import {
   Briefcase,
   Dumbbell,
-  Flame,
   Footprints,
   OctagonAlert,
   Sunrise,
@@ -13,7 +12,6 @@ import {
 import { useLocalStorage } from '@/lib/use-local-storage'
 import { EveningWalk } from './tracker/evening-walk'
 import { FamilyTime } from './tracker/family-time'
-import { FastingPill, FastingTimer, useFast } from './tracker/fasting-timer'
 import { FitnessSection } from './tracker/fitness-section'
 import { MealLog } from './tracker/meal-log'
 import { MorningRoutine } from './tracker/morning-routine'
@@ -23,7 +21,6 @@ import { formatTimeOfDay, useNow } from './tracker/use-now'
 
 export function DailyTracker() {
   const now = useNow(1000)
-  const fast = useFast()
 
   const [shower, setShower] = useLocalStorage('shower', false)
   const [coffee, setCoffee] = useLocalStorage('coffee', false)
@@ -46,7 +43,6 @@ export function DailyTracker() {
               {today} · {formatTimeOfDay(now)}
             </p>
           </div>
-          <FastingPill fast={fast} />
         </div>
       </header>
 
@@ -159,19 +155,9 @@ export function DailyTracker() {
           title="Daily Walk"
           subtitle="30–60 min. With family or solo."
           accent="primary"
-        >
-          <EveningWalk walkedWithFamily={walkedWithFamily} />
-        </TimelineRow>
-
-        <TimelineRow
-          icon={Flame}
-          time="Starts 6:00 PM"
-          title="Fasting Timer"
-          subtitle="Counting up since your last meal."
-          accent="primary"
           isLast
         >
-          <FastingTimer fast={fast} />
+          <EveningWalk walkedWithFamily={walkedWithFamily} />
         </TimelineRow>
       </section>
     </main>
