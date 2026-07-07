@@ -6,6 +6,7 @@ import {
   Dumbbell,
   Film,
   Footprints,
+  Heart,
   LayoutGrid,
   Laptop,
   OctagonAlert,
@@ -17,7 +18,7 @@ import {
 import { useState } from 'react'
 import { useLocalStorage } from '@/lib/use-local-storage'
 import { Button } from '@/components/ui/button'
-import { CalendarView } from './tracker/calendar-view'
+import { CalendarView, isMadelynDay } from './tracker/calendar-view'
 import { CalorieCounter } from './tracker/calorie-counter'
 import { EveningWalk } from './tracker/evening-walk'
 import { FamilyTime } from './tracker/family-time'
@@ -45,6 +46,7 @@ export function DailyTracker() {
 
   const dayOfWeek = now.getDay()
   const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
+  const hasMadelyn = isMadelynDay()
 
   return (
     <main className="mx-auto min-h-screen w-full max-w-2xl px-4 pb-16 sm:px-6">
@@ -60,6 +62,7 @@ export function DailyTracker() {
             <p className="text-xs text-muted-foreground text-left">
               {today} · {formatTimeOfDay(now)}
               {isWeekend && <span className="ml-2 rounded-full bg-primary/15 px-2 py-0.5 text-primary">Weekend</span>}
+              {hasMadelyn && <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-pink-100 px-2 py-0.5 text-pink-700 dark:bg-pink-950 dark:text-pink-300"><Heart className="size-3 fill-pink-500" />Madelyn</span>}
             </p>
           </button>
           <div className="flex items-center gap-2">
@@ -89,8 +92,12 @@ export function DailyTracker() {
         <CalendarView />
       ) : view === 'weekly' ? (
         <WeeklyView />
+      ) : isWeekend && hasMadelyn ? (
+        <WeekendMadelynTimeline coffee={coffee} onToggleCoffee={setCoffee} walkedWithFamily={walkedWithFamily} onToggleWalk={setWalkedWithFamily} />
       ) : isWeekend ? (
         <WeekendTimeline coffee={coffee} onToggleCoffee={setCoffee} walkedWithFamily={walkedWithFamily} onToggleWalk={setWalkedWithFamily} />
+      ) : hasMadelyn ? (
+        <WeekdayMadelynTimeline coffee={coffee} onToggleCoffee={setCoffee} walkedWithFamily={walkedWithFamily} onToggleWalk={setWalkedWithFamily} />
       ) : (
         <WeekdayTimeline coffee={coffee} onToggleCoffee={setCoffee} shower={shower} onToggleShower={setShower} walkedWithFamily={walkedWithFamily} onToggleWalk={setWalkedWithFamily} />
       )}
@@ -338,6 +345,224 @@ function WeekendTimeline({ coffee, onToggleCoffee, walkedWithFamily, onToggleWal
           <Film className="mt-0.5 size-5 shrink-0 text-primary" />
           <p className="text-sm text-muted-foreground">
             Relax, watch something good, and enjoy the evening.
+          </p>
+        </div>
+      </TimelineRow>
+    </section>
+  )
+}
+
+function WeekdayMadelynTimeline({ coffee, onToggleCoffee, walkedWithFamily, onToggleWalk }: {
+  coffee: boolean
+  onToggleCoffee: (v: boolean) => void
+  walkedWithFamily: boolean
+  onToggleWalk: (v: boolean) => void
+}) {
+  return (
+    <section aria-label="Weekday with Madelyn">
+      <TimelineRow
+        icon={Sunrise}
+        time="6:30 AM – 8:30 AM"
+        title="Morning Routine"
+        subtitle="Ease into the day with Madelyn."
+        accent="primary"
+      >
+        <MorningRoutine coffee={coffee} onToggleCoffee={onToggleCoffee} />
+      </TimelineRow>
+
+      <TimelineRow
+        icon={Utensils}
+        time="Breakfast"
+        title="Breakfast"
+        subtitle="Breakfast together."
+        accent="primary"
+      >
+        <MealLog mealSlot="breakfast" />
+      </TimelineRow>
+
+      <TimelineRow
+        icon={Briefcase}
+        time="8:30 AM – 5:00 PM"
+        title="Work"
+        subtitle="Day job while she's at school/activities."
+        accent="primary"
+      >
+        <WorkBlock id="afternoon" startMin={8 * 60 + 30} endMin={17 * 60} />
+      </TimelineRow>
+
+      <TimelineRow
+        icon={Utensils}
+        time="Lunch"
+        title="Lunch"
+        subtitle="Midday fuel."
+        accent="primary"
+      >
+        <MealLog mealSlot="lunch" />
+      </TimelineRow>
+
+      <TimelineRow
+        icon={Utensils}
+        time="Supper"
+        title="Supper"
+        subtitle="Dinner with Madelyn."
+        accent="primary"
+      >
+        <MealLog mealSlot="supper" />
+      </TimelineRow>
+
+      <TimelineRow
+        icon={OctagonAlert}
+        time="6:00 PM"
+        title="Eating Window Closes"
+        accent="destructive"
+      >
+        <div className="flex items-start gap-3 rounded-lg border border-destructive/40 bg-destructive/10 p-3">
+          <OctagonAlert className="mt-0.5 size-5 shrink-0 text-destructive" />
+          <div>
+            <p className="text-sm font-semibold text-destructive">Eating window closes.</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              No more food — fasting until 10 AM tomorrow.
+            </p>
+          </div>
+        </div>
+      </TimelineRow>
+
+      <TimelineRow
+        icon={Users}
+        time="5:00 PM – 8:00 PM"
+        title="Madelyn Time"
+        subtitle="All in — be present with her."
+        accent="primary"
+      >
+        <FamilyTime walkedWithFamily={walkedWithFamily} onToggleWalk={onToggleWalk} />
+      </TimelineRow>
+
+      <TimelineRow
+        icon={Footprints}
+        time="Evening"
+        title="Walk with Madelyn"
+        subtitle="Get outside together."
+        accent="primary"
+      >
+        <EveningWalk walkedWithFamily={walkedWithFamily} />
+      </TimelineRow>
+
+      <TimelineRow
+        icon={Film}
+        time="8:00 PM – 9:00 PM"
+        title="Wind Down"
+        subtitle="Movie, show, or reading together."
+        accent="primary"
+        isLast
+      >
+        <div className="flex items-start gap-3 rounded-lg border border-border/60 bg-secondary/40 p-3">
+          <Heart className="mt-0.5 size-5 shrink-0 text-pink-500" />
+          <p className="text-sm text-muted-foreground">
+            Quality time before bed. No work tonight.
+          </p>
+        </div>
+      </TimelineRow>
+    </section>
+  )
+}
+
+function WeekendMadelynTimeline({ coffee, onToggleCoffee, walkedWithFamily, onToggleWalk }: {
+  coffee: boolean
+  onToggleCoffee: (v: boolean) => void
+  walkedWithFamily: boolean
+  onToggleWalk: (v: boolean) => void
+}) {
+  return (
+    <section aria-label="Weekend with Madelyn">
+      <TimelineRow
+        icon={Sunrise}
+        time="6:30 AM"
+        title="Morning Routine"
+        subtitle="Easy start before she wakes up."
+        accent="primary"
+      >
+        <MorningRoutine coffee={coffee} onToggleCoffee={onToggleCoffee} />
+      </TimelineRow>
+
+      <TimelineRow
+        icon={Utensils}
+        time="Breakfast"
+        title="Breakfast"
+        subtitle="Make breakfast together."
+        accent="primary"
+      >
+        <MealLog mealSlot="breakfast" />
+      </TimelineRow>
+
+      <TimelineRow
+        icon={Users}
+        time="All Day"
+        title="Madelyn Day"
+        subtitle="She's the priority. Be fully present."
+        accent="primary"
+      >
+        <FamilyTime walkedWithFamily={walkedWithFamily} onToggleWalk={onToggleWalk} />
+      </TimelineRow>
+
+      <TimelineRow
+        icon={Utensils}
+        time="Lunch"
+        title="Lunch"
+        subtitle="Lunch together."
+        accent="primary"
+      >
+        <MealLog mealSlot="lunch" />
+      </TimelineRow>
+
+      <TimelineRow
+        icon={Utensils}
+        time="Supper"
+        title="Supper"
+        subtitle="Dinner together."
+        accent="primary"
+      >
+        <MealLog mealSlot="supper" />
+      </TimelineRow>
+
+      <TimelineRow
+        icon={OctagonAlert}
+        time="6:00 PM"
+        title="Eating Window Closes"
+        accent="destructive"
+      >
+        <div className="flex items-start gap-3 rounded-lg border border-destructive/40 bg-destructive/10 p-3">
+          <OctagonAlert className="mt-0.5 size-5 shrink-0 text-destructive" />
+          <div>
+            <p className="text-sm font-semibold text-destructive">Eating window closes.</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              No more food — fasting until 10 AM tomorrow.
+            </p>
+          </div>
+        </div>
+      </TimelineRow>
+
+      <TimelineRow
+        icon={Footprints}
+        time="Evening"
+        title="Walk"
+        subtitle="Get outside with Madelyn."
+        accent="primary"
+      >
+        <EveningWalk walkedWithFamily={walkedWithFamily} />
+      </TimelineRow>
+
+      <TimelineRow
+        icon={Film}
+        time="8:00 PM – 10:00 PM"
+        title="Movie Night"
+        subtitle="Cozy up and watch something together."
+        accent="primary"
+        isLast
+      >
+        <div className="flex items-start gap-3 rounded-lg border border-border/60 bg-secondary/40 p-3">
+          <Heart className="mt-0.5 size-5 shrink-0 text-pink-500" />
+          <p className="text-sm text-muted-foreground">
+            Her pick. Popcorn optional.
           </p>
         </div>
       </TimelineRow>
