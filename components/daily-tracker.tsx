@@ -4,12 +4,14 @@ import {
   Briefcase,
   Dumbbell,
   Flame,
+  Footprints,
   OctagonAlert,
   Sunrise,
   Users,
   Utensils,
 } from 'lucide-react'
 import { useLocalStorage } from '@/lib/use-local-storage'
+import { EveningWalk } from './tracker/evening-walk'
 import { FamilyTime } from './tracker/family-time'
 import { FastingPill, FastingTimer, useFast } from './tracker/fasting-timer'
 import { FitnessSection } from './tracker/fitness-section'
@@ -25,6 +27,7 @@ export function DailyTracker() {
 
   const [shower, setShower] = useLocalStorage('shower', false)
   const [coffee, setCoffee] = useLocalStorage('coffee', false)
+  const [walkedWithFamily, setWalkedWithFamily] = useLocalStorage('walked-with-family', false)
 
   const today = now.toLocaleDateString([], {
     weekday: 'long',
@@ -147,7 +150,17 @@ export function DailyTracker() {
           subtitle="Be present. Log what you did together."
           accent="primary"
         >
-          <FamilyTime />
+          <FamilyTime walkedWithFamily={walkedWithFamily} onToggleWalk={setWalkedWithFamily} />
+        </TimelineRow>
+
+        <TimelineRow
+          icon={Footprints}
+          time="Evening"
+          title="Daily Walk"
+          subtitle="30–60 min. With family or solo."
+          accent="primary"
+        >
+          <EveningWalk walkedWithFamily={walkedWithFamily} />
         </TimelineRow>
 
         <TimelineRow

@@ -1,15 +1,16 @@
 'use client'
 
-import { Check, Heart, Plus, X } from 'lucide-react'
+import { Check, Footprints, Heart, Plus, X } from 'lucide-react'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { useLocalStorage } from '@/lib/use-local-storage'
+import { HabitCheckbox } from './primitives'
 
 type Activity = { id: number; text: string; done: boolean }
 
-const SUGGESTIONS = ['Dinner together', 'Walk outside', 'Read a story', 'Board game']
+const SUGGESTIONS = ['Dinner together', 'Read a story', 'Board game', 'Playground']
 
-export function FamilyTime() {
+export function FamilyTime({ walkedWithFamily, onToggleWalk }: { walkedWithFamily: boolean; onToggleWalk: (v: boolean) => void }) {
   const [draft, setDraft] = useState('')
   const [activities, setActivities] = useLocalStorage<Activity[]>('family-activities', [])
 
@@ -25,6 +26,13 @@ export function FamilyTime() {
 
   return (
     <div className="grid gap-3">
+      <HabitCheckbox
+        checked={walkedWithFamily}
+        onChange={onToggleWalk}
+        label="Family walk"
+        hint="Walk together — counts as your daily walk"
+      />
+
       <div className="flex flex-col gap-2 sm:flex-row">
         <input
           value={draft}
