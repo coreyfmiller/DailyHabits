@@ -322,22 +322,62 @@ export function RecurringTasksManager() {
             {editing.frequency === 'biweekly' && (
               <>
                 <div>
-                  <label className="text-xs font-medium text-muted-foreground">Start date (epoch for week counting)</label>
-                  <input
-                    type="date"
-                    value={editing.startDate.slice(0, 10)}
-                    onChange={(e) => setEditing({ ...editing, startDate: e.target.value })}
-                    className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/60"
-                  />
+                  <label className="text-xs font-medium text-muted-foreground">Does this happen this week?</label>
+                  <div className="mt-1 flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        // Set startDate to this week's Sunday so "this week" = even
+                        const d = new Date()
+                        d.setDate(d.getDate() - d.getDay())
+                        setEditing({ ...editing, startDate: d.toISOString().slice(0, 10) })
+                      }}
+                      className={cn(
+                        'rounded-md border px-3 py-1.5 text-xs font-medium transition-colors',
+                        (() => {
+                          const d = new Date()
+                          d.setDate(d.getDate() - d.getDay())
+                          return editing.startDate === d.toISOString().slice(0, 10)
+                        })()
+                          ? 'border-primary bg-primary/10 text-primary'
+                          : 'border-border bg-background text-muted-foreground hover:text-foreground'
+                      )}
+                    >
+                      Yes, this week
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        // Set startDate to next week's Sunday so "this week" = odd (won't show)
+                        const d = new Date()
+                        d.setDate(d.getDate() - d.getDay() + 7)
+                        setEditing({ ...editing, startDate: d.toISOString().slice(0, 10) })
+                      }}
+                      className={cn(
+                        'rounded-md border px-3 py-1.5 text-xs font-medium transition-colors',
+                        (() => {
+                          const d = new Date()
+                          d.setDate(d.getDate() - d.getDay() + 7)
+                          return editing.startDate === d.toISOString().slice(0, 10)
+                        })()
+                          ? 'border-primary bg-primary/10 text-primary'
+                          : 'border-border bg-background text-muted-foreground hover:text-foreground'
+                      )}
+                    >
+                      No, next week
+                    </button>
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">This determines the alternating schedule going forward.</p>
                 </div>
                 <div>
                   <label className="text-xs font-medium text-muted-foreground">Group (optional — pairs alternating tasks)</label>
                   <input
                     value={editing.group ?? ''}
                     onChange={(e) => setEditing({ ...editing, group: e.target.value })}
-                    placeholder="e.g. trash"
+                    placeholder="e.g. trash — tasks in the same group alternate"
                     className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/60"
                   />
+                  <p className="mt-1 text-xs text-muted-foreground">Put garbage & recycling in the same group and they'll swap each week.</p>
                 </div>
               </>
             )}
