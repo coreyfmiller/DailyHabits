@@ -3,6 +3,7 @@
 import {
   Briefcase,
   Calendar,
+  Droplets,
   Dumbbell,
   Film,
   Footprints,
@@ -36,6 +37,8 @@ import { TimelineRow } from './tracker/timeline-row'
 import { WeeklyView } from './tracker/weekly-view'
 import { WorkBlock } from './tracker/work-block'
 import { formatTimeOfDay, useNow } from './tracker/use-now'
+import { WaterTracker } from './tracker/water-tracker'
+import { SupplementManager } from './tracker/supplement-tracker'
 
 /** Determine which time block is active based on current minutes */
 function getActiveBlock(minutesNow: number, isWeekend: boolean) {
@@ -130,6 +133,7 @@ export function DailyTracker() {
       ) : view === 'settings' ? (
         <>
           <RecurringTasksManager />
+          <SupplementManager />
           <DataManager />
           <NotificationSettings />
         </>
@@ -197,6 +201,17 @@ function WeekdayTimeline({ coffee, onToggleCoffee, shower, onToggleShower, walke
         status={min >= 18 * 60 ? 'past' : min >= 10 * 60 ? 'active' : 'future'}
       >
         <MealTabs />
+      </TimelineRow>
+
+      <TimelineRow
+        icon={Droplets}
+        time="All Day"
+        title="Water"
+        subtitle="Stay hydrated — 8 glasses."
+        accent="primary"
+        status={min >= 21 * 60 ? 'past' : min >= 6 * 60 + 30 ? 'active' : 'future'}
+      >
+        <WaterTracker />
       </TimelineRow>
 
       <TimelineRow
@@ -328,6 +343,17 @@ function WeekendTimeline({ coffee, onToggleCoffee, walkedWithFamily, onToggleWal
       </TimelineRow>
 
       <TimelineRow
+        icon={Droplets}
+        time="All Day"
+        title="Water"
+        subtitle="Stay hydrated — 8 glasses."
+        accent="primary"
+        status={min >= 21 * 60 ? 'past' : min >= 6 * 60 + 30 ? 'active' : 'future'}
+      >
+        <WaterTracker />
+      </TimelineRow>
+
+      <TimelineRow
         icon={Laptop}
         time="6:30 AM – 10:30 AM"
         title="Personal Work Block"
@@ -438,6 +464,17 @@ function WeekdayMadelynTimeline({ coffee, onToggleCoffee, walkedWithFamily, onTo
       </TimelineRow>
 
       <TimelineRow
+        icon={Droplets}
+        time="All Day"
+        title="Water"
+        subtitle="Stay hydrated — 8 glasses."
+        accent="primary"
+        status={min >= 21 * 60 ? 'past' : min >= 6 * 60 + 30 ? 'active' : 'future'}
+      >
+        <WaterTracker />
+      </TimelineRow>
+
+      <TimelineRow
         icon={Briefcase}
         time="8:30 AM – 5:00 PM"
         title="Work"
@@ -545,6 +582,17 @@ function WeekendMadelynTimeline({ coffee, onToggleCoffee, walkedWithFamily, onTo
         status={s(10 * 60, 18 * 60)}
       >
         <MealTabs />
+      </TimelineRow>
+
+      <TimelineRow
+        icon={Droplets}
+        time="All Day"
+        title="Water"
+        subtitle="Stay hydrated — 8 glasses."
+        accent="primary"
+        status={min >= 21 * 60 ? 'past' : min >= 6 * 60 + 30 ? 'active' : 'future'}
+      >
+        <WaterTracker />
       </TimelineRow>
 
       <TimelineRow

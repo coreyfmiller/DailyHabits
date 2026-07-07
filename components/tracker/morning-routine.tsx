@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button'
 import { useLocalStorage } from '@/lib/use-local-storage'
 import { HabitCheckbox } from './primitives'
 import { RecurringTasksChecklist } from './recurring-tasks'
+import { SleepLog } from './sleep-log'
+import { SupplementChecklist } from './supplement-tracker'
 
 type TodoItem = { id: number; text: string; done: boolean }
 
@@ -40,12 +42,16 @@ export function MorningRoutine({
 
   return (
     <div className="grid gap-4">
+      <SleepLog />
+
       <HabitCheckbox
         checked={coffee}
         onChange={onToggleCoffee}
         label="Coffee"
         hint="Morning fuel"
       />
+
+      <SupplementChecklist />
 
       <RecurringTasksChecklist />
 
