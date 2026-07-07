@@ -4,7 +4,6 @@ import { Check, NotebookPen, Plus, X } from 'lucide-react'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { useLocalStorage } from '@/lib/use-local-storage'
-import { FocusTimer } from './focus-timer'
 import { HabitCheckbox } from './primitives'
 
 type TodoItem = { id: number; text: string; done: boolean }
@@ -156,8 +155,6 @@ export function MorningRoutine({
           </ul>
         )}
       </div>
-
-      <FocusTimer />
     </div>
   )
 }
