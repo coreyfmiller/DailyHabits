@@ -1,6 +1,6 @@
 'use client'
 
-import { Loader2, Sparkles, Utensils } from 'lucide-react'
+import { Loader2, Sparkles, Utensils, X } from 'lucide-react'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { useLocalStorage } from '@/lib/use-local-storage'
@@ -134,11 +134,21 @@ export function MealLog({ mealSlot }: { mealSlot: 'breakfast' | 'lunch' | 'suppe
                     {entry.mealType} · {formatTimeOfDay(new Date(entry.at))}
                   </p>
                 </div>
-                {entry.estimatedCalories != null && (
-                  <span className="shrink-0 rounded-full bg-primary/15 px-2.5 py-1 font-mono text-xs text-primary">
-                    ~{entry.estimatedCalories} kcal
-                  </span>
-                )}
+                <div className="flex shrink-0 items-center gap-2">
+                  {entry.estimatedCalories != null && (
+                    <span className="rounded-full bg-primary/15 px-2.5 py-1 font-mono text-xs text-primary">
+                      ~{entry.estimatedCalories} kcal
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setEntries((prev) => prev.filter((e) => e.id !== entry.id))}
+                    className="text-muted-foreground transition-colors hover:text-destructive"
+                    aria-label={`Remove ${entry.title}`}
+                  >
+                    <X className="size-4" />
+                  </button>
+                </div>
               </div>
 
               {entry.items.length > 0 && (
