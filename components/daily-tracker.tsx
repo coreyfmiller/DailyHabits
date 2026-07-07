@@ -1,13 +1,13 @@
 'use client'
 
 import {
-  Bot,
   Briefcase,
   Dumbbell,
   Flame,
   OctagonAlert,
   Sunrise,
   Users,
+  Utensils,
 } from 'lucide-react'
 import { useLocalStorage } from '@/lib/use-local-storage'
 import { FamilyTime } from './tracker/family-time'
@@ -63,6 +63,16 @@ export function DailyTracker() {
         </TimelineRow>
 
         <TimelineRow
+          icon={Utensils}
+          time="Breakfast"
+          title="Breakfast"
+          subtitle="First meal of the day."
+          accent="primary"
+        >
+          <MealLog mealSlot="breakfast" />
+        </TimelineRow>
+
+        <TimelineRow
           icon={Briefcase}
           time="8:30 AM – 12:00 PM"
           title="Morning Work Block"
@@ -73,20 +83,20 @@ export function DailyTracker() {
         </TimelineRow>
 
         <TimelineRow
-          icon={Bot}
-          time="10:00 AM – 6:00 PM"
-          title="AI Meal Log"
-          subtitle="Eating window open. Describe a meal and let AI track it."
+          icon={Utensils}
+          time="Lunch"
+          title="Lunch"
+          subtitle="Midday fuel."
           accent="primary"
         >
-          <MealLog />
+          <MealLog mealSlot="lunch" />
         </TimelineRow>
 
         <TimelineRow
           icon={Dumbbell}
           time="12:00 PM – 1:00 PM"
-          title="Lunch & Fitness"
-          subtitle="Eat, train, and recover."
+          title="Fitness"
+          subtitle="Weight training and recovery."
           accent="primary"
         >
           <FitnessSection shower={shower} onToggleShower={setShower} />
@@ -100,6 +110,16 @@ export function DailyTracker() {
           accent="primary"
         >
           <WorkBlock id="afternoon" startMin={13 * 60} endMin={17 * 60} />
+        </TimelineRow>
+
+        <TimelineRow
+          icon={Utensils}
+          time="Supper"
+          title="Supper"
+          subtitle="Last meal before the fast begins."
+          accent="primary"
+        >
+          <MealLog mealSlot="supper" />
         </TimelineRow>
 
         {/* 6 PM HARD STOP */}

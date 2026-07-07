@@ -17,11 +17,17 @@ type MealEntry = {
   healthNote: string | null
 }
 
-export function MealLog() {
+const PLACEHOLDERS: Record<string, string> = {
+  breakfast: 'e.g. "Oatmeal with berries and a black coffee"',
+  lunch: 'e.g. "Grilled chicken salad with avocado and an iced tea"',
+  supper: 'e.g. "Salmon with rice and roasted veggies"',
+}
+
+export function MealLog({ mealSlot }: { mealSlot: 'breakfast' | 'lunch' | 'supper' }) {
   const [description, setDescription] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [entries, setEntries] = useLocalStorage<MealEntry[]>('meals', [])
+  const [entries, setEntries] = useLocalStorage<MealEntry[]>(`meals-${mealSlot}`, [])
 
   const logMeal = async () => {
     const text = description.trim()
@@ -46,7 +52,7 @@ export function MealLog() {
           at,
           description: text,
           title: data.title ?? text,
-          mealType: data.mealType ?? 'meal',
+          mealType: data.mealType ?? mealSlot,
           items: Array.isArray(data.items) ? data.items : [],
           estimatedCalories:
             typeof data.estimatedCalories === 'number' ? data.estimatedCalories : null,
@@ -56,14 +62,13 @@ export function MealLog() {
       ])
       setDescription('')
     } catch {
-      // Graceful fallback: still record the meal without AI enrichment.
       setEntries((prev) => [
         {
           id: Date.now(),
           at,
           description: text,
           title: text,
-          mealType: 'meal',
+          mealType: mealSlot,
           items: [],
           estimatedCalories: null,
           healthNote: null,
@@ -95,7 +100,7 @@ export function MealLog() {
             }
           }}
           rows={2}
-          placeholder="Describe what you ate — e.g. “Grilled chicken salad with avocado and an iced coffee”"
+          placeholder={PLACEHOLDERS[mealSlot] ?? 'Describe what you ate'}
           className="w-full resize-none rounded-lg border border-border bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/60"
         />
         <div className="flex items-center justify-between gap-3">
@@ -106,7 +111,7 @@ export function MealLog() {
             ) : (
               <Sparkles className="size-4" />
             )}
-            {loading ? 'Analyzing…' : 'Log meal with AI'}
+            {loading ? 'Analyzing…' : 'Log with AI'}
           </Button>
         </div>
         {error ? <p className="text-xs text-destructive">{error}</p> : null}
