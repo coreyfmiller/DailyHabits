@@ -4,6 +4,7 @@ import {
   Briefcase,
   Dumbbell,
   Footprints,
+  Laptop,
   OctagonAlert,
   Sunrise,
   Users,
@@ -72,10 +73,10 @@ export function DailyTracker() {
         </TimelineRow>
 
         <TimelineRow
-          icon={Briefcase}
+          icon={Laptop}
           time="8:30 AM – 12:00 PM"
           title="Morning Work Block"
-          subtitle="Deep, focused work before lunch."
+          subtitle="Personal business — build your own thing."
           accent="primary"
         >
           <WorkBlock id="morning" startMin={8 * 60 + 30} endMin={12 * 60} />
@@ -105,7 +106,7 @@ export function DailyTracker() {
           icon={Briefcase}
           time="1:00 PM – 5:00 PM"
           title="Afternoon Work Block"
-          subtitle="Finish strong before the hard stop."
+          subtitle="Day job — finish strong."
           accent="primary"
         >
           <WorkBlock id="afternoon" startMin={13 * 60} endMin={17 * 60} />
@@ -155,9 +156,19 @@ export function DailyTracker() {
           title="Daily Walk"
           subtitle="30–60 min. With family or solo."
           accent="primary"
-          isLast
         >
           <EveningWalk walkedWithFamily={walkedWithFamily} />
+        </TimelineRow>
+
+        <TimelineRow
+          icon={Laptop}
+          time="8:00 PM – 9:00 PM"
+          title="Evening Work Block"
+          subtitle="Personal business — one focused hour."
+          accent="primary"
+          isLast
+        >
+          <WorkBlock id="evening" startMin={20 * 60} endMin={21 * 60} />
         </TimelineRow>
       </section>
     </main>
