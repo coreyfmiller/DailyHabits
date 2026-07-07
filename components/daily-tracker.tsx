@@ -20,15 +20,38 @@ import { useLocalStorage } from '@/lib/use-local-storage'
 import { Button } from '@/components/ui/button'
 import { CalendarView, isMadelynDay } from './tracker/calendar-view'
 import { CalorieCounter } from './tracker/calorie-counter'
+import { DailyProgress } from './tracker/daily-progress'
 import { EveningWalk } from './tracker/evening-walk'
 import { FamilyTime } from './tracker/family-time'
 import { FitnessSection } from './tracker/fitness-section'
+import { MealTabs } from './tracker/meal-tabs'
 import { MealLog } from './tracker/meal-log'
 import { MorningRoutine } from './tracker/morning-routine'
+import { ThemeToggle } from './tracker/theme-toggle'
 import { TimelineRow } from './tracker/timeline-row'
 import { WeeklyView } from './tracker/weekly-view'
 import { WorkBlock } from './tracker/work-block'
 import { formatTimeOfDay, useNow } from './tracker/use-now'
+
+/** Determine which time block is active based on current minutes */
+function getActiveBlock(minutesNow: number, isWeekend: boolean) {
+  if (isWeekend) {
+    if (minutesNow < 6 * 60 + 30) return 'pre'
+    if (minutesNow < 10 * 60 + 30) return 'weekend-work'
+    if (minutesNow < 12 * 60) return 'lunch'
+    if (minutesNow < 20 * 60) return 'family'
+    return 'evening'
+  }
+  if (minutesNow < 6 * 60 + 30) return 'pre'
+  if (minutesNow < 8 * 60 + 30) return 'morning-routine'
+  if (minutesNow < 12 * 60) return 'morning-work'
+  if (minutesNow < 13 * 60) return 'fitness'
+  if (minutesNow < 17 * 60) return 'afternoon-work'
+  if (minutesNow < 18 * 60) return 'supper'
+  if (minutesNow < 20 * 60) return 'family'
+  if (minutesNow < 21 * 60) return 'evening-work'
+  return 'done'
+}
 
 export function DailyTracker() {
   const now = useNow(1000)
@@ -47,6 +70,8 @@ export function DailyTracker() {
   const dayOfWeek = now.getDay()
   const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
   const hasMadelyn = isMadelynDay()
+  const minutesNow = now.getHours() * 60 + now.getMinutes()
+  const activeBlock = getActiveBlock(minutesNow, isWeekend)
 
   return (
     <main className="mx-auto min-h-screen w-full max-w-2xl px-4 pb-16 sm:px-6">
@@ -66,7 +91,9 @@ export function DailyTracker() {
             </p>
           </button>
           <div className="flex items-center gap-2">
+            <DailyProgress />
             <CalorieCounter />
+            <ThemeToggle />
             {view !== 'timeline' ? (
               <Button size="sm" variant="default" onClick={() => setView('timeline')}>
                 <X className="size-4" />
@@ -113,6 +140,27 @@ function WeekdayTimeline({ coffee, onToggleCoffee, shower, onToggleShower, walke
   walkedWithFamily: boolean
   onToggleWalk: (v: boolean) => void
 }) {
+  const now = useNow(60_000)
+  const min = now.getHours() * 60 + now.getMinutes()
+
+  const s = (block: string): 'past' | 'active' | 'future' => {
+    const ranges: Record<string, [number, number]> = {
+      'morning-routine': [6 * 60 + 30, 8 * 60 + 30],
+      'meals': [0, 24 * 60], // always available
+      'morning-work': [8 * 60 + 30, 12 * 60],
+      'fitness': [12 * 60, 13 * 60],
+      'afternoon-work': [13 * 60, 17 * 60],
+      'hard-stop': [18 * 60, 18 * 60 + 1],
+      'family': [18 * 60, 20 * 60],
+      'walk': [18 * 60, 21 * 60],
+      'evening-work': [20 * 60, 21 * 60],
+    }
+    const [start, end] = ranges[block] ?? [0, 0]
+    if (min >= end) return 'past'
+    if (min >= start) return 'active'
+    return 'future'
+  }
+
   return (
     <section aria-label="Weekday timeline">
       <TimelineRow
@@ -121,18 +169,20 @@ function WeekdayTimeline({ coffee, onToggleCoffee, shower, onToggleShower, walke
         title="Morning Routine"
         subtitle="Ease into the day and set your focus."
         accent="primary"
+        status={s('morning-routine')}
       >
         <MorningRoutine coffee={coffee} onToggleCoffee={onToggleCoffee} />
       </TimelineRow>
 
       <TimelineRow
         icon={Utensils}
-        time="Breakfast"
-        title="Breakfast"
-        subtitle="First meal of the day."
+        time="10:00 AM – 6:00 PM"
+        title="Meals"
+        subtitle="Eating window. Log breakfast, lunch, and supper."
         accent="primary"
+        status={min >= 18 * 60 ? 'past' : min >= 10 * 60 ? 'active' : 'future'}
       >
-        <MealLog mealSlot="breakfast" />
+        <MealTabs />
       </TimelineRow>
 
       <TimelineRow
@@ -141,26 +191,18 @@ function WeekdayTimeline({ coffee, onToggleCoffee, shower, onToggleShower, walke
         title="Morning Work Block"
         subtitle="Personal business — build your own thing."
         accent="primary"
+        status={s('morning-work')}
       >
         <WorkBlock id="morning" startMin={8 * 60 + 30} endMin={12 * 60} />
-      </TimelineRow>
-
-      <TimelineRow
-        icon={Utensils}
-        time="Lunch"
-        title="Lunch"
-        subtitle="Midday fuel."
-        accent="primary"
-      >
-        <MealLog mealSlot="lunch" />
       </TimelineRow>
 
       <TimelineRow
         icon={Dumbbell}
         time="12:00 PM – 1:00 PM"
         title="Fitness"
-        subtitle="Weight training and recovery."
+        subtitle="20-min dumbbell routine and recovery."
         accent="primary"
+        status={s('fitness')}
       >
         <FitnessSection shower={shower} onToggleShower={onToggleShower} />
       </TimelineRow>
@@ -171,18 +213,9 @@ function WeekdayTimeline({ coffee, onToggleCoffee, shower, onToggleShower, walke
         title="Afternoon Work Block"
         subtitle="Day job — finish strong."
         accent="primary"
+        status={s('afternoon-work')}
       >
         <WorkBlock id="afternoon" startMin={13 * 60} endMin={17 * 60} />
-      </TimelineRow>
-
-      <TimelineRow
-        icon={Utensils}
-        time="Supper"
-        title="Supper"
-        subtitle="Last meal before the fast begins."
-        accent="primary"
-      >
-        <MealLog mealSlot="supper" />
       </TimelineRow>
 
       {/* 6 PM HARD STOP */}
@@ -191,13 +224,14 @@ function WeekdayTimeline({ coffee, onToggleCoffee, shower, onToggleShower, walke
         time="6:00 PM"
         title="Hard Stop"
         accent="destructive"
+        status={s('hard-stop')}
       >
         <div className="flex items-start gap-3 rounded-lg border border-destructive/40 bg-destructive/10 p-3">
           <OctagonAlert className="mt-0.5 size-5 shrink-0 text-destructive" />
           <div>
             <p className="text-sm font-semibold text-destructive">Work stops. Eating window closes.</p>
             <p className="mt-1 text-xs text-muted-foreground">
-              No more meals or work after this point — the fast begins and family time starts now.
+              No more meals or work after this point — family time starts now.
             </p>
           </div>
         </div>
@@ -209,6 +243,7 @@ function WeekdayTimeline({ coffee, onToggleCoffee, shower, onToggleShower, walke
         title="Family Time"
         subtitle="Be present. Log what you did together."
         accent="primary"
+        status={s('family')}
       >
         <FamilyTime walkedWithFamily={walkedWithFamily} onToggleWalk={onToggleWalk} />
       </TimelineRow>
@@ -219,6 +254,7 @@ function WeekdayTimeline({ coffee, onToggleCoffee, shower, onToggleShower, walke
         title="Daily Walk"
         subtitle="30–60 min. With family or solo."
         accent="primary"
+        status={s('walk')}
       >
         <EveningWalk walkedWithFamily={walkedWithFamily} />
       </TimelineRow>
@@ -229,6 +265,7 @@ function WeekdayTimeline({ coffee, onToggleCoffee, shower, onToggleShower, walke
         title="Evening Work Block"
         subtitle="Personal business — one focused hour."
         accent="primary"
+        status={s('evening-work')}
         isLast
       >
         <WorkBlock id="evening" startMin={20 * 60} endMin={21 * 60} />
