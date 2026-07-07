@@ -1,0 +1,28 @@
+{
+  "name": "Daily Rhythm",
+  "short_name": "Rhythm",
+  "description": "Time-blocked daily routine and habit tracker",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#141821",
+  "theme_color": "#141821",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon-dark-32x32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "/apple-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

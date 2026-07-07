@@ -9,8 +9,13 @@ const geistMono = Geist_Mono({ subsets: ['latin'], variable: '--font-geist-mono'
 export const metadata: Metadata = {
   title: 'Daily Rhythm — Routine & Habit Tracker',
   description:
-    'A minimalist, time-blocked daily routine and habit tracker with a persistent fasting timer and AI meal log.',
-  generator: 'v0.app',
+    'A minimalist, time-blocked daily routine and habit tracker.',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'Daily Rhythm',
+  },
 }
 
 export const viewport: Viewport = {
@@ -29,6 +34,17 @@ export default function RootLayout({
       <body className="bg-background font-sans antialiased">
         {children}
         {process.env.NODE_ENV === 'production' && <Analytics />}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                  navigator.serviceWorker.register('/sw.js')
+                })
+              }
+            `,
+          }}
+        />
       </body>
     </html>
   )
