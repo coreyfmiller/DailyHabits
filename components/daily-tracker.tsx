@@ -10,6 +10,7 @@ import {
   LayoutGrid,
   Laptop,
   OctagonAlert,
+  Settings,
   Sunrise,
   Users,
   Utensils,
@@ -26,6 +27,7 @@ import { FamilyTime } from './tracker/family-time'
 import { FitnessSection } from './tracker/fitness-section'
 import { MealTabs } from './tracker/meal-tabs'
 import { MorningRoutine } from './tracker/morning-routine'
+import { RecurringTasksManager } from './tracker/recurring-tasks'
 import { ThemeToggle } from './tracker/theme-toggle'
 import { TimelineRow } from './tracker/timeline-row'
 import { WeeklyView } from './tracker/weekly-view'
@@ -54,7 +56,7 @@ function getActiveBlock(minutesNow: number, isWeekend: boolean) {
 
 export function DailyTracker() {
   const now = useNow(1000)
-  const [view, setView] = useState<'timeline' | 'calendar' | 'weekly'>('timeline')
+  const [view, setView] = useState<'timeline' | 'calendar' | 'weekly' | 'settings'>('timeline')
 
   const [shower, setShower] = useLocalStorage('shower', false)
   const [coffee, setCoffee] = useLocalStorage('coffee', false)
@@ -100,6 +102,9 @@ export function DailyTracker() {
               </Button>
             ) : (
               <>
+                <Button size="sm" variant="secondary" onClick={() => setView('settings')}>
+                  <Settings className="size-4" />
+                </Button>
                 <Button size="sm" variant="secondary" onClick={() => setView('weekly')}>
                   <LayoutGrid className="size-4" />
                   Week
@@ -118,6 +123,8 @@ export function DailyTracker() {
         <CalendarView />
       ) : view === 'weekly' ? (
         <WeeklyView />
+      ) : view === 'settings' ? (
+        <RecurringTasksManager />
       ) : isWeekend && hasMadelyn ? (
         <WeekendMadelynTimeline coffee={coffee} onToggleCoffee={setCoffee} walkedWithFamily={walkedWithFamily} onToggleWalk={setWalkedWithFamily} />
       ) : isWeekend ? (
@@ -281,7 +288,6 @@ function WeekendTimeline({ coffee, onToggleCoffee, walkedWithFamily, onToggleWal
 }) {
   const now = useNow(60_000)
   const min = now.getHours() * 60 + now.getMinutes()
-  const isSunday = now.getDay() === 0
 
   const s = (start: number, end: number): 'past' | 'active' | 'future' => {
     if (min >= end) return 'past'
@@ -299,7 +305,7 @@ function WeekendTimeline({ coffee, onToggleCoffee, walkedWithFamily, onToggleWal
         accent="primary"
         status={s(6 * 60 + 30, 7 * 60)}
       >
-        <MorningRoutine coffee={coffee} onToggleCoffee={onToggleCoffee} showShave={isSunday} />
+        <MorningRoutine coffee={coffee} onToggleCoffee={onToggleCoffee} />
       </TimelineRow>
 
       <TimelineRow
@@ -502,7 +508,6 @@ function WeekendMadelynTimeline({ coffee, onToggleCoffee, walkedWithFamily, onTo
 }) {
   const now = useNow(60_000)
   const min = now.getHours() * 60 + now.getMinutes()
-  const isSunday = now.getDay() === 0
 
   const s = (start: number, end: number): 'past' | 'active' | 'future' => {
     if (min >= end) return 'past'
@@ -520,7 +525,7 @@ function WeekendMadelynTimeline({ coffee, onToggleCoffee, walkedWithFamily, onTo
         accent="primary"
         status={s(6 * 60 + 30, 7 * 60 + 30)}
       >
-        <MorningRoutine coffee={coffee} onToggleCoffee={onToggleCoffee} showShave={isSunday} />
+        <MorningRoutine coffee={coffee} onToggleCoffee={onToggleCoffee} />
       </TimelineRow>
 
       <TimelineRow

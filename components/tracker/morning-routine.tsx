@@ -5,21 +5,19 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { useLocalStorage } from '@/lib/use-local-storage'
 import { HabitCheckbox } from './primitives'
+import { RecurringTasksChecklist } from './recurring-tasks'
 
 type TodoItem = { id: number; text: string; done: boolean }
 
 export function MorningRoutine({
   coffee,
   onToggleCoffee,
-  showShave = false,
 }: {
   coffee: boolean
   onToggleCoffee: (v: boolean) => void
-  showShave?: boolean
 }) {
   const [accomplishments, setAccomplishments] = useLocalStorage<string[]>('accomplishments', [])
   const [todos, setTodos] = useLocalStorage<TodoItem[]>('todos', [])
-  const [shaved, setShaved] = useLocalStorage('shaved-head', false)
   const [accDraft, setAccDraft] = useState('')
   const [todoDraft, setTodoDraft] = useState('')
 
@@ -49,14 +47,7 @@ export function MorningRoutine({
         hint="Morning fuel"
       />
 
-      {showShave && (
-        <HabitCheckbox
-          checked={shaved}
-          onChange={setShaved}
-          label="Shave head"
-          hint="Sunday fresh"
-        />
-      )}
+      <RecurringTasksChecklist />
 
       {/* What I accomplished */}
       <div className="rounded-lg border border-border/60 bg-secondary/40 p-3">
