@@ -15,7 +15,7 @@ import {
 import { useState } from 'react'
 import { useLocalStorage } from '@/lib/use-local-storage'
 import { Button } from '@/components/ui/button'
-import { DaughterCalendar } from './tracker/daughter-calendar'
+import { CalendarView } from './tracker/calendar-view'
 import { EveningWalk } from './tracker/evening-walk'
 import { FamilyTime } from './tracker/family-time'
 import { FitnessSection } from './tracker/fitness-section'
@@ -60,13 +60,13 @@ export function DailyTracker() {
             onClick={() => setView(view === 'timeline' ? 'calendar' : 'timeline')}
           >
             <Calendar className="size-4" />
-            {view === 'calendar' ? 'Back to today' : 'Daughter days'}
+            {view === 'calendar' ? 'Back to today' : 'Calendar'}
           </Button>
         </div>
       </header>
 
       {view === 'calendar' ? (
-        <DaughterCalendar />
+        <CalendarView />
       ) : isWeekend ? (
         <WeekendTimeline coffee={coffee} onToggleCoffee={setCoffee} walkedWithFamily={walkedWithFamily} onToggleWalk={setWalkedWithFamily} />
       ) : (
