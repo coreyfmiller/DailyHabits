@@ -1,7 +1,7 @@
 'use client'
 
 import { Loader2, Sparkles, Utensils, X } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { useLocalStorage } from '@/lib/use-local-storage'
 import { formatTimeOfDay } from './use-now'
@@ -23,11 +23,65 @@ const PLACEHOLDERS: Record<string, string> = {
   supper: 'e.g. "Salmon with rice and roasted veggies"',
 }
 
+function getRecentMeals(): MealEntry[] {
+  if (typeof window === 'undefined') return []
+
+  const now = new Date()
+  const entries: MealEntry[] = []
+
+  for (let i = 0; i < 14; i++) {
+    const d = new Date(now)
+    d.setDate(d.getDate() - i)
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+    for (const slot of ['meals-breakfast', 'meals-lunch', 'meals-supper']) {
+      try {
+        const raw = localStorage.getItem(`daily-habits:${key}:${slot}`)
+        if (raw) {
+          const arr = JSON.parse(raw)
+          if (Array.isArray(arr)) {
+            entries.push(...arr)
+          }
+        }
+      } catch {}
+    }
+  }
+
+  // Deduplicate by title, keep most recent (first found since we iterate newest first)
+  const seen = new Set<string>()
+  const unique: MealEntry[] = []
+  for (const entry of entries) {
+    const normalizedTitle = entry.title?.toLowerCase().trim()
+    if (!normalizedTitle || seen.has(normalizedTitle)) continue
+    seen.add(normalizedTitle)
+    unique.push(entry)
+    if (unique.length >= 5) break
+  }
+
+  return unique
+}
+
 export function MealLog({ mealSlot }: { mealSlot: 'breakfast' | 'lunch' | 'supper' }) {
   const [description, setDescription] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [entries, setEntries] = useLocalStorage<MealEntry[]>(`meals-${mealSlot}`, [])
+  const [recentMeals, setRecentMeals] = useState<MealEntry[]>([])
+
+  useEffect(() => {
+    setRecentMeals(getRecentMeals())
+  }, [])
+
+  const addQuickMeal = (meal: MealEntry) => {
+    setEntries((prev) => [
+      {
+        ...meal,
+        id: Date.now(),
+        at: new Date().toISOString(),
+        mealType: mealSlot,
+      },
+      ...prev,
+    ])
+  }
 
   const logMeal = async () => {
     const text = description.trim()
@@ -84,6 +138,22 @@ export function MealLog({ mealSlot }: { mealSlot: 'breakfast' | 'lunch' | 'suppe
 
   return (
     <div className="grid gap-3">
+      {/* Recent meals quick-add */}
+      {recentMeals.length > 0 && (
+        <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+          {recentMeals.map((meal) => (
+            <button
+              key={meal.title}
+              type="button"
+              onClick={() => addQuickMeal(meal)}
+              className="shrink-0 rounded-full border border-border/60 bg-secondary/50 px-2.5 py-1 text-xs text-foreground transition-colors hover:bg-primary/10 hover:border-primary/30"
+            >
+              {meal.title}
+            </button>
+          ))}
+        </div>
+      )}
+
       <div className="flex flex-col gap-2">
         <textarea
           value={description}

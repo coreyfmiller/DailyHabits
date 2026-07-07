@@ -27,7 +27,10 @@ import { FamilyTime } from './tracker/family-time'
 import { FitnessSection } from './tracker/fitness-section'
 import { MealTabs } from './tracker/meal-tabs'
 import { MorningRoutine } from './tracker/morning-routine'
+import { DataManager } from './tracker/data-manager'
+import { NotificationSettings } from './tracker/notifications'
 import { RecurringTasksManager } from './tracker/recurring-tasks'
+import { StreakCounter } from './tracker/streak-counter'
 import { ThemeToggle } from './tracker/theme-toggle'
 import { TimelineRow } from './tracker/timeline-row'
 import { WeeklyView } from './tracker/weekly-view'
@@ -93,6 +96,7 @@ export function DailyTracker() {
           </button>
           <div className="flex items-center gap-2">
             <DailyProgress />
+            <StreakCounter />
             <CalorieCounter />
             <ThemeToggle />
             {view !== 'timeline' ? (
@@ -124,7 +128,11 @@ export function DailyTracker() {
       ) : view === 'weekly' ? (
         <WeeklyView />
       ) : view === 'settings' ? (
-        <RecurringTasksManager />
+        <>
+          <RecurringTasksManager />
+          <DataManager />
+          <NotificationSettings />
+        </>
       ) : isWeekend && hasMadelyn ? (
         <WeekendMadelynTimeline coffee={coffee} onToggleCoffee={setCoffee} walkedWithFamily={walkedWithFamily} onToggleWalk={setWalkedWithFamily} />
       ) : isWeekend ? (
