@@ -16,6 +16,7 @@ import { useState } from 'react'
 import { useLocalStorage } from '@/lib/use-local-storage'
 import { Button } from '@/components/ui/button'
 import { CalendarView } from './tracker/calendar-view'
+import { CalorieCounter } from './tracker/calorie-counter'
 import { EveningWalk } from './tracker/evening-walk'
 import { FamilyTime } from './tracker/family-time'
 import { FitnessSection } from './tracker/fitness-section'
@@ -54,14 +55,17 @@ export function DailyTracker() {
               {isWeekend && <span className="ml-2 rounded-full bg-primary/15 px-2 py-0.5 text-primary">Weekend</span>}
             </p>
           </div>
-          <Button
-            size="sm"
-            variant={view === 'calendar' ? 'default' : 'secondary'}
-            onClick={() => setView(view === 'timeline' ? 'calendar' : 'timeline')}
-          >
-            <Calendar className="size-4" />
-            {view === 'calendar' ? 'Back to today' : 'Calendar'}
-          </Button>
+          <div className="flex items-center gap-2">
+            <CalorieCounter />
+            <Button
+              size="sm"
+              variant={view === 'calendar' ? 'default' : 'secondary'}
+              onClick={() => setView(view === 'timeline' ? 'calendar' : 'timeline')}
+            >
+              <Calendar className="size-4" />
+              {view === 'calendar' ? 'Back to today' : 'Calendar'}
+            </Button>
+          </div>
         </div>
       </header>
 
