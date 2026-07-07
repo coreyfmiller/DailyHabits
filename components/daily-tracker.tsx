@@ -281,6 +281,7 @@ function WeekendTimeline({ coffee, onToggleCoffee, walkedWithFamily, onToggleWal
 }) {
   const now = useNow(60_000)
   const min = now.getHours() * 60 + now.getMinutes()
+  const isSunday = now.getDay() === 0
 
   const s = (start: number, end: number): 'past' | 'active' | 'future' => {
     if (min >= end) return 'past'
@@ -298,7 +299,7 @@ function WeekendTimeline({ coffee, onToggleCoffee, walkedWithFamily, onToggleWal
         accent="primary"
         status={s(6 * 60 + 30, 7 * 60)}
       >
-        <MorningRoutine coffee={coffee} onToggleCoffee={onToggleCoffee} />
+        <MorningRoutine coffee={coffee} onToggleCoffee={onToggleCoffee} showShave={isSunday} />
       </TimelineRow>
 
       <TimelineRow
@@ -501,6 +502,7 @@ function WeekendMadelynTimeline({ coffee, onToggleCoffee, walkedWithFamily, onTo
 }) {
   const now = useNow(60_000)
   const min = now.getHours() * 60 + now.getMinutes()
+  const isSunday = now.getDay() === 0
 
   const s = (start: number, end: number): 'past' | 'active' | 'future' => {
     if (min >= end) return 'past'
@@ -518,7 +520,7 @@ function WeekendMadelynTimeline({ coffee, onToggleCoffee, walkedWithFamily, onTo
         accent="primary"
         status={s(6 * 60 + 30, 7 * 60 + 30)}
       >
-        <MorningRoutine coffee={coffee} onToggleCoffee={onToggleCoffee} />
+        <MorningRoutine coffee={coffee} onToggleCoffee={onToggleCoffee} showShave={isSunday} />
       </TimelineRow>
 
       <TimelineRow
