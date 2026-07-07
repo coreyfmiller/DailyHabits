@@ -11,6 +11,7 @@ import {
   Sunrise,
   Users,
   Utensils,
+  X,
 } from 'lucide-react'
 import { useState } from 'react'
 import { useLocalStorage } from '@/lib/use-local-storage'
@@ -48,23 +49,30 @@ export function DailyTracker() {
       {/* Persistent header */}
       <header className="sticky top-0 z-20 -mx-4 mb-8 border-b border-border/60 bg-background/80 px-4 py-4 backdrop-blur-md sm:-mx-6 sm:px-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
+          <button
+            type="button"
+            onClick={() => view === 'calendar' && setView('timeline')}
+            className={view === 'calendar' ? 'cursor-pointer' : 'cursor-default'}
+          >
             <h1 className="text-lg font-semibold tracking-tight text-foreground">Daily Rhythm</h1>
             <p className="text-xs text-muted-foreground">
               {today} · {formatTimeOfDay(now)}
               {isWeekend && <span className="ml-2 rounded-full bg-primary/15 px-2 py-0.5 text-primary">Weekend</span>}
             </p>
-          </div>
+          </button>
           <div className="flex items-center gap-2">
             <CalorieCounter />
-            <Button
-              size="sm"
-              variant={view === 'calendar' ? 'default' : 'secondary'}
-              onClick={() => setView(view === 'timeline' ? 'calendar' : 'timeline')}
-            >
-              <Calendar className="size-4" />
-              {view === 'calendar' ? 'Back to today' : 'Calendar'}
-            </Button>
+            {view === 'calendar' ? (
+              <Button size="sm" variant="default" onClick={() => setView('timeline')}>
+                <X className="size-4" />
+                Close
+              </Button>
+            ) : (
+              <Button size="sm" variant="secondary" onClick={() => setView('calendar')}>
+                <Calendar className="size-4" />
+                Calendar
+              </Button>
+            )}
           </div>
         </div>
       </header>
