@@ -64,12 +64,12 @@ export function DailyTracker() {
 
         <TimelineRow
           icon={Briefcase}
-          time="8:30 AM – 6:00 PM"
-          title="Professional Work"
-          subtitle="Deep, focused work until the hard stop."
+          time="8:30 AM – 12:00 PM"
+          title="Morning Work Block"
+          subtitle="Deep, focused work before lunch."
           accent="primary"
         >
-          <WorkBlock />
+          <WorkBlock id="morning" startMin={8 * 60 + 30} endMin={12 * 60} />
         </TimelineRow>
 
         <TimelineRow
@@ -84,12 +84,22 @@ export function DailyTracker() {
 
         <TimelineRow
           icon={Dumbbell}
-          time="Lunch Break"
-          title="Fitness"
-          subtitle="Weight training and recovery."
+          time="12:00 PM – 1:00 PM"
+          title="Lunch & Fitness"
+          subtitle="Eat, train, and recover."
           accent="primary"
         >
           <FitnessSection shower={shower} onToggleShower={setShower} />
+        </TimelineRow>
+
+        <TimelineRow
+          icon={Briefcase}
+          time="1:00 PM – 5:00 PM"
+          title="Afternoon Work Block"
+          subtitle="Finish strong before the hard stop."
+          accent="primary"
+        >
+          <WorkBlock id="afternoon" startMin={13 * 60} endMin={17 * 60} />
         </TimelineRow>
 
         {/* 6 PM HARD STOP */}
