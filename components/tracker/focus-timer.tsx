@@ -3,10 +3,11 @@
 import { Pause, Play, RotateCcw, Timer } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
+import { useLocalStorage } from '@/lib/use-local-storage'
 import { formatClock } from './use-now'
 
 export function FocusTimer() {
-  const [seconds, setSeconds] = useState(0)
+  const [seconds, setSeconds] = useLocalStorage('focus-seconds', 0)
   const [running, setRunning] = useState(false)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 

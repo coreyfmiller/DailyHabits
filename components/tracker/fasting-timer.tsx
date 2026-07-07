@@ -1,8 +1,9 @@
 'use client'
 
 import { Flame, RotateCcw } from 'lucide-react'
-import { useCallback, useState } from 'react'
+import { useCallback } from 'react'
 import { Button } from '@/components/ui/button'
+import { useLocalStorage } from '@/lib/use-local-storage'
 import { ProgressBar } from './primitives'
 import { formatClock, formatTimeOfDay, useNow } from './use-now'
 
@@ -11,13 +12,17 @@ const GOAL_HOURS = 16 // target overnight fast
 /** Shared fasting state. Fast begins at 5:00 PM (the eating hard stop). */
 export function useFast() {
   const now = useNow(1000)
-  const [start, setStart] = useState<Date>(() => {
+
+  const defaultStart = (() => {
     const d = new Date()
     d.setHours(17, 0, 0, 0) // 5:00 PM today
-    return d
-  })
+    return d.toISOString()
+  })()
 
-  const reset = useCallback(() => setStart(new Date()), [])
+  const [startIso, setStartIso] = useLocalStorage<string>('fast-start', defaultStart)
+  const start = new Date(startIso)
+
+  const reset = useCallback(() => setStartIso(new Date().toISOString()), [setStartIso])
 
   const diffMs = now.getTime() - start.getTime()
   const started = diffMs >= 0

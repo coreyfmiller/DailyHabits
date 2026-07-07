@@ -3,6 +3,7 @@
 import { Check, UtensilsCrossed } from 'lucide-react'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
+import { useLocalStorage } from '@/lib/use-local-storage'
 import { ProgressBar } from './primitives'
 import { formatTimeOfDay, useNow } from './use-now'
 
@@ -11,7 +12,7 @@ const WORK_END_MIN = 17 * 60 // 5:00 PM
 
 export function WorkBlock() {
   const now = useNow(30_000)
-  const [lunchAt, setLunchAt] = useState<Date | null>(null)
+  const [lunchAt, setLunchAt] = useLocalStorage<string | null>('lunch-at', null)
   const [lunchNote, setLunchNote] = useState('')
 
   const minutesNow = now.getHours() * 60 + now.getMinutes()
@@ -46,7 +47,7 @@ export function WorkBlock() {
           <div className="mt-2 flex items-center justify-between gap-3 text-sm">
             <span className="flex items-center gap-2 text-foreground">
               <Check className="size-4 text-primary" />
-              Logged at {formatTimeOfDay(lunchAt)}
+              Logged at {formatTimeOfDay(new Date(lunchAt))}
               {lunchNote ? <span className="text-muted-foreground">· {lunchNote}</span> : null}
             </span>
             <Button size="sm" variant="ghost" onClick={() => setLunchAt(null)}>
@@ -61,7 +62,7 @@ export function WorkBlock() {
               placeholder="What's for lunch? (optional)"
               className="flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/60"
             />
-            <Button size="sm" onClick={() => setLunchAt(new Date())}>
+            <Button size="sm" onClick={() => setLunchAt(new Date().toISOString())}>
               Log lunch
             </Button>
           </div>

@@ -9,7 +9,7 @@ import {
   Sunrise,
   Users,
 } from 'lucide-react'
-import { useState } from 'react'
+import { useLocalStorage } from '@/lib/use-local-storage'
 import { FamilyTime } from './tracker/family-time'
 import { FastingPill, FastingTimer, useFast } from './tracker/fasting-timer'
 import { FitnessSection } from './tracker/fitness-section'
@@ -23,9 +23,9 @@ export function DailyTracker() {
   const now = useNow(1000)
   const fast = useFast()
 
-  const [shower, setShower] = useState(false)
-  const [coffee, setCoffee] = useState(false)
-  const [gymShower, setGymShower] = useState(false)
+  const [shower, setShower] = useLocalStorage('shower', false)
+  const [coffee, setCoffee] = useLocalStorage('coffee', false)
+  const [gymShower, setGymShower] = useLocalStorage('gym-shower', false)
 
   const today = now.toLocaleDateString([], {
     weekday: 'long',

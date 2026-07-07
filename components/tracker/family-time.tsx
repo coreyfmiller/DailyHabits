@@ -3,6 +3,7 @@
 import { Check, Heart, Plus, X } from 'lucide-react'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
+import { useLocalStorage } from '@/lib/use-local-storage'
 
 type Activity = { id: number; text: string; done: boolean }
 
@@ -10,7 +11,7 @@ const SUGGESTIONS = ['Dinner together', 'Walk outside', 'Read a story', 'Board g
 
 export function FamilyTime() {
   const [draft, setDraft] = useState('')
-  const [activities, setActivities] = useState<Activity[]>([])
+  const [activities, setActivities] = useLocalStorage<Activity[]>('family-activities', [])
 
   const add = (text: string) => {
     const value = text.trim()

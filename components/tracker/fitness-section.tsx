@@ -3,6 +3,7 @@
 import { Dumbbell, Plus, X } from 'lucide-react'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
+import { useLocalStorage } from '@/lib/use-local-storage'
 import { HabitCheckbox } from './primitives'
 
 type Lift = { id: number; text: string }
@@ -15,7 +16,7 @@ export function FitnessSection({
   onToggleGymShower: (v: boolean) => void
 }) {
   const [draft, setDraft] = useState('')
-  const [lifts, setLifts] = useState<Lift[]>([])
+  const [lifts, setLifts] = useLocalStorage<Lift[]>('lifts', [])
 
   const addLift = () => {
     const text = draft.trim()

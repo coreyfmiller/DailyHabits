@@ -3,11 +3,12 @@
 import { Loader2, Sparkles, Utensils } from 'lucide-react'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
+import { useLocalStorage } from '@/lib/use-local-storage'
 import { formatTimeOfDay } from './use-now'
 
 type MealEntry = {
   id: number
-  at: Date
+  at: string
   description: string
   title: string
   mealType: string
@@ -20,7 +21,7 @@ export function MealLog() {
   const [description, setDescription] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [entries, setEntries] = useState<MealEntry[]>([])
+  const [entries, setEntries] = useLocalStorage<MealEntry[]>('meals', [])
 
   const logMeal = async () => {
     const text = description.trim()
@@ -28,7 +29,7 @@ export function MealLog() {
 
     setLoading(true)
     setError(null)
-    const at = new Date()
+    const at = new Date().toISOString()
 
     try {
       const res = await fetch('/api/meal', {
@@ -125,7 +126,7 @@ export function MealLog() {
                     <span className="truncate">{entry.title}</span>
                   </p>
                   <p className="mt-0.5 text-xs capitalize text-muted-foreground">
-                    {entry.mealType} · {formatTimeOfDay(entry.at)}
+                    {entry.mealType} · {formatTimeOfDay(new Date(entry.at))}
                   </p>
                 </div>
                 {entry.estimatedCalories != null && (
