@@ -2,6 +2,7 @@
 
 import {
   Briefcase,
+  Calendar,
   Dumbbell,
   Film,
   Footprints,
@@ -11,7 +12,10 @@ import {
   Users,
   Utensils,
 } from 'lucide-react'
+import { useState } from 'react'
 import { useLocalStorage } from '@/lib/use-local-storage'
+import { Button } from '@/components/ui/button'
+import { DaughterCalendar } from './tracker/daughter-calendar'
 import { EveningWalk } from './tracker/evening-walk'
 import { FamilyTime } from './tracker/family-time'
 import { FitnessSection } from './tracker/fitness-section'
@@ -23,6 +27,7 @@ import { formatTimeOfDay, useNow } from './tracker/use-now'
 
 export function DailyTracker() {
   const now = useNow(1000)
+  const [view, setView] = useState<'timeline' | 'calendar'>('timeline')
 
   const [shower, setShower] = useLocalStorage('shower', false)
   const [coffee, setCoffee] = useLocalStorage('coffee', false)
@@ -34,7 +39,7 @@ export function DailyTracker() {
     day: 'numeric',
   })
 
-  const dayOfWeek = now.getDay() // 0 = Sunday, 6 = Saturday
+  const dayOfWeek = now.getDay()
   const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
 
   return (
@@ -49,10 +54,24 @@ export function DailyTracker() {
               {isWeekend && <span className="ml-2 rounded-full bg-primary/15 px-2 py-0.5 text-primary">Weekend</span>}
             </p>
           </div>
+          <Button
+            size="sm"
+            variant={view === 'calendar' ? 'default' : 'secondary'}
+            onClick={() => setView(view === 'timeline' ? 'calendar' : 'timeline')}
+          >
+            <Calendar className="size-4" />
+            {view === 'calendar' ? 'Back to today' : 'Daughter days'}
+          </Button>
         </div>
       </header>
 
-      {isWeekend ? <WeekendTimeline coffee={coffee} onToggleCoffee={setCoffee} walkedWithFamily={walkedWithFamily} onToggleWalk={setWalkedWithFamily} /> : <WeekdayTimeline coffee={coffee} onToggleCoffee={setCoffee} shower={shower} onToggleShower={setShower} walkedWithFamily={walkedWithFamily} onToggleWalk={setWalkedWithFamily} />}
+      {view === 'calendar' ? (
+        <DaughterCalendar />
+      ) : isWeekend ? (
+        <WeekendTimeline coffee={coffee} onToggleCoffee={setCoffee} walkedWithFamily={walkedWithFamily} onToggleWalk={setWalkedWithFamily} />
+      ) : (
+        <WeekdayTimeline coffee={coffee} onToggleCoffee={setCoffee} shower={shower} onToggleShower={setShower} walkedWithFamily={walkedWithFamily} onToggleWalk={setWalkedWithFamily} />
+      )}
     </main>
   )
 }
