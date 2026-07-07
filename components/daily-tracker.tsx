@@ -73,6 +73,16 @@ export function DailyTracker() {
         </TimelineRow>
 
         <TimelineRow
+          icon={Bot}
+          time="10:00 AM – 6:00 PM"
+          title="AI Meal Log"
+          subtitle="Eating window open. Describe a meal and let AI track it."
+          accent="primary"
+        >
+          <MealLog />
+        </TimelineRow>
+
+        <TimelineRow
           icon={Dumbbell}
           time="Lunch Break"
           title="Fitness"
@@ -116,19 +126,9 @@ export function DailyTracker() {
           title="Fasting Timer"
           subtitle="Counting up since your last meal."
           accent="primary"
-        >
-          <FastingTimer fast={fast} />
-        </TimelineRow>
-
-        <TimelineRow
-          icon={Bot}
-          time="Anytime"
-          title="AI Meal Log"
-          subtitle="Describe a meal and let AI track what & when."
-          accent="primary"
           isLast
         >
-          <MealLog />
+          <FastingTimer fast={fast} />
         </TimelineRow>
       </section>
     </main>
