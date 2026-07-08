@@ -1,169 +1,197 @@
 'use client'
 
-import { Check, NotebookPen, Plus, X } from 'lucide-react'
-import { useState } from 'react'
+import { Check, Plus, Settings2, X } from 'lucide-react'
+import { useCallback, useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { useLocalStorage } from '@/lib/use-local-storage'
-import { HabitCheckbox } from './primitives'
+import { cn } from '@/lib/utils'
 import { RecurringTasksChecklist } from './recurring-tasks'
-import { SleepLog } from './sleep-log'
 import { SupplementChecklist } from './supplement-tracker'
 
-type TodoItem = { id: number; text: string; done: boolean }
+// ─── Types ────────────────────────────────────────────────────────────────────
 
-export function MorningRoutine({
-  coffee,
-  onToggleCoffee,
-}: {
-  coffee: boolean
-  onToggleCoffee: (v: boolean) => void
-}) {
-  const [accomplishments, setAccomplishments] = useLocalStorage<string[]>('accomplishments', [])
-  const [todos, setTodos] = useLocalStorage<TodoItem[]>('todos', [])
-  const [accDraft, setAccDraft] = useState('')
-  const [todoDraft, setTodoDraft] = useState('')
+type RitualItem = { id: string; label: string; hint?: string }
 
-  const addAccomplishment = () => {
-    const text = accDraft.trim()
-    if (!text) return
-    setAccomplishments((prev) => [...prev, text])
-    setAccDraft('')
+const STORAGE_KEY = 'morning-routine-items'
+
+// ─── Persistence ──────────────────────────────────────────────────────────────
+
+function getStoredItems(): RitualItem[] {
+  if (typeof window === 'undefined') return []
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    if (raw) return JSON.parse(raw)
+  } catch {}
+  return []
+}
+
+function setStoredItems(items: RitualItem[]) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(items))
+  } catch {}
+}
+
+// ─── Component ────────────────────────────────────────────────────────────────
+
+export function MorningRoutine() {
+  const [items, setItems] = useState<RitualItem[]>(getStoredItems)
+  const [checkedIds, setCheckedIds] = useLocalStorage<string[]>('routine-checked', [])
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState('')
+
+  // If no items configured, show first-time setup
+  const isEmpty = items.length === 0 && !editing
+
+  const persist = useCallback((updated: RitualItem[]) => {
+    setItems(updated)
+    setStoredItems(updated)
+  }, [])
+
+  const addItem = () => {
+    const label = draft.trim()
+    if (!label) return
+    const id = `ri-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
+    persist([...items, { id, label }])
+    setDraft('')
   }
 
-  const addTodo = () => {
-    const text = todoDraft.trim()
-    if (!text) return
-    setTodos((prev) => [...prev, { id: Date.now(), text, done: false }])
-    setTodoDraft('')
+  const removeItem = (id: string) => {
+    persist(items.filter((i) => i.id !== id))
+    setCheckedIds((prev) => prev.filter((cid) => cid !== id))
   }
 
-  const toggleTodo = (id: number) =>
-    setTodos((prev) => prev.map((t) => (t.id === id ? { ...t, done: !t.done } : t)))
+  const toggleCheck = (id: string) => {
+    setCheckedIds((prev) =>
+      prev.includes(id) ? prev.filter((cid) => cid !== id) : [...prev, id]
+    )
+  }
+
+  const completedCount = items.filter((i) => checkedIds.includes(i.id)).length
 
   return (
     <div className="grid gap-4">
-      <SleepLog />
-
-      <HabitCheckbox
-        checked={coffee}
-        onChange={onToggleCoffee}
-        label="Coffee"
-        hint="Morning fuel"
-      />
-
-      <SupplementChecklist time="morning" />
-
-      <RecurringTasksChecklist />
-
-      {/* What I accomplished */}
-      <div className="rounded-lg border border-border/60 bg-secondary/40 p-3">
-        <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-          <Check className="size-4 text-primary" />
-          What I got done
-        </div>
-        <div className="mt-2 flex flex-col gap-2 sm:flex-row">
-          <input
-            value={accDraft}
-            onChange={(e) => setAccDraft(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.nativeEvent.isComposing && e.keyCode !== 229) addAccomplishment()
-            }}
-            placeholder="e.g. Finished auth module, shipped PR #42"
-            className="flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/60"
-          />
-          <Button size="sm" onClick={addAccomplishment}>
-            <Plus className="size-4" />
-            Add
-          </Button>
-        </div>
-        {accomplishments.length > 0 && (
-          <ul className="mt-2 grid gap-1.5">
-            {accomplishments.map((item, i) => (
-              <li
-                key={i}
-                className="flex items-center justify-between gap-2 rounded-md bg-background px-3 py-2 text-sm text-foreground"
-              >
-                <span className="min-w-0 truncate">{item}</span>
+      {/* Configured habits */}
+      {items.length > 0 && !editing && (
+        <div>
+          <div className="mb-2 flex items-center justify-between">
+            <span className="text-xs text-muted-foreground">
+              {completedCount}/{items.length} done
+            </span>
+            <button
+              type="button"
+              onClick={() => setEditing(true)}
+              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <Settings2 className="size-3" />
+              Edit
+            </button>
+          </div>
+          <div className="grid gap-1.5">
+            {items.map((item) => {
+              const checked = checkedIds.includes(item.id)
+              return (
                 <button
+                  key={item.id}
                   type="button"
-                  onClick={() => setAccomplishments((prev) => prev.filter((_, idx) => idx !== i))}
-                  className="text-muted-foreground transition-colors hover:text-destructive"
-                  aria-label={`Remove ${item}`}
-                >
-                  <X className="size-4" />
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-
-      {/* Tonight's pickup notes */}
-      <div className="rounded-lg border border-border/60 bg-secondary/40 p-3">
-        <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-          <NotebookPen className="size-4 text-primary" />
-          Pick up tonight
-        </div>
-        <p className="mt-1 text-xs text-muted-foreground">
-          Notes for what needs doing — so you can jump right in later.
-        </p>
-        <div className="mt-2 flex flex-col gap-2 sm:flex-row">
-          <input
-            value={todoDraft}
-            onChange={(e) => setTodoDraft(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.nativeEvent.isComposing && e.keyCode !== 229) addTodo()
-            }}
-            placeholder="e.g. Fix pagination bug, review design doc"
-            className="flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/60"
-          />
-          <Button size="sm" onClick={addTodo}>
-            <Plus className="size-4" />
-            Add
-          </Button>
-        </div>
-        {todos.length > 0 && (
-          <ul className="mt-2 grid gap-1.5">
-            {todos.map((todo) => (
-              <li
-                key={todo.id}
-                className="flex items-center justify-between gap-2 rounded-md bg-background px-3 py-2 text-sm"
-              >
-                <button
-                  type="button"
-                  onClick={() => toggleTodo(todo.id)}
-                  className="flex min-w-0 items-center gap-2 text-left"
+                  onClick={() => toggleCheck(item.id)}
+                  className="flex w-full items-center gap-3 rounded-lg bg-secondary/40 px-3 py-2.5 text-left transition-colors hover:bg-secondary/60"
                 >
                   <span
-                    className={`flex size-5 shrink-0 items-center justify-center rounded-md border ${
-                      todo.done
+                    className={cn(
+                      'flex size-5 shrink-0 items-center justify-center rounded-md border transition-colors',
+                      checked
                         ? 'border-primary bg-primary text-primary-foreground'
                         : 'border-border bg-background'
-                    }`}
+                    )}
                   >
-                    <Check className={`size-3.5 ${todo.done ? 'opacity-100' : 'opacity-0'}`} />
+                    <Check className={cn('size-3.5', checked ? 'opacity-100' : 'opacity-0')} />
                   </span>
-                  <span
-                    className={`min-w-0 truncate ${
-                      todo.done ? 'text-muted-foreground line-through' : 'text-foreground'
-                    }`}
-                  >
-                    {todo.text}
+                  <span className={cn(
+                    'text-sm',
+                    checked ? 'text-muted-foreground line-through' : 'text-foreground'
+                  )}>
+                    {item.label}
                   </span>
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setTodos((prev) => prev.filter((t) => t.id !== todo.id))}
-                  className="text-muted-foreground transition-colors hover:text-destructive"
-                  aria-label={`Remove ${todo.text}`}
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Empty state / Setup */}
+      {isEmpty && (
+        <div className="rounded-lg border border-dashed border-border/60 p-4 text-center">
+          <p className="text-sm text-muted-foreground">No routine items configured yet.</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Add things like coffee, medication, make bed — whatever starts your day right.
+          </p>
+          <Button size="sm" className="mt-3" onClick={() => setEditing(true)}>
+            <Plus className="size-4" />
+            Set Up Routine
+          </Button>
+        </div>
+      )}
+
+      {/* Edit mode */}
+      {editing && (
+        <div className="rounded-lg border border-border/60 bg-secondary/30 p-3">
+          <div className="mb-2 flex items-center justify-between">
+            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+              Configure Routine
+            </span>
+            <button
+              type="button"
+              onClick={() => setEditing(false)}
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Done
+            </button>
+          </div>
+
+          {items.length > 0 && (
+            <ul className="mb-3 grid gap-1.5">
+              {items.map((item) => (
+                <li
+                  key={item.id}
+                  className="flex items-center justify-between gap-2 rounded-md bg-background px-3 py-2 text-sm text-foreground"
                 >
-                  <X className="size-4" />
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+                  <span>{item.label}</span>
+                  <button
+                    type="button"
+                    onClick={() => removeItem(item.id)}
+                    className="text-muted-foreground hover:text-destructive transition-colors"
+                    aria-label={`Remove ${item.label}`}
+                  >
+                    <X className="size-4" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          <div className="flex gap-2">
+            <input
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.nativeEvent.isComposing) addItem()
+              }}
+              placeholder="e.g. Coffee, Medication, Make bed..."
+              className="flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/60"
+            />
+            <Button size="sm" onClick={addItem} disabled={!draft.trim()}>
+              <Plus className="size-4" />
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Morning supplements */}
+      <SupplementChecklist time="morning" />
+
+      {/* Recurring tasks */}
+      <RecurringTasksChecklist />
     </div>
   )
 }

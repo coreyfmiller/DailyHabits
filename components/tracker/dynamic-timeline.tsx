@@ -47,7 +47,6 @@ import { MealTabs } from './meal-tabs'
 import { MorningRoutine } from './morning-routine'
 import { SupplementChecklist } from './supplement-tracker'
 import { TimelineRow } from './timeline-row'
-import { TodayTasks } from './today-tasks'
 import { useNow } from './use-now'
 import { WaterTracker } from './water-tracker'
 import { WorkBlock } from './work-block'
@@ -114,7 +113,6 @@ export function DynamicTimeline({ schedule }: { schedule: ScheduleBlock[] }) {
 
   const [shower, setShower] = useLocalStorage('shower', false)
   const [coffee, setCoffee] = useLocalStorage('coffee', false)
-  const [walkedWithFamily, setWalkedWithFamily] = useLocalStorage('walked-with-family', false)
 
   return (
     <section aria-label="Daily timeline">
@@ -150,12 +148,8 @@ export function DynamicTimeline({ schedule }: { schedule: ScheduleBlock[] }) {
             isLast={isLast}
           >
             {renderBlockContent(blockType.component, block, {
-              coffee,
-              onToggleCoffee: setCoffee,
               shower,
               onToggleShower: setShower,
-              walkedWithFamily,
-              onToggleWalk: setWalkedWithFamily,
               startMin,
               endMin,
             })}
@@ -172,19 +166,15 @@ function renderBlockContent(
   component: string,
   block: ScheduleBlock,
   props: {
-    coffee: boolean
-    onToggleCoffee: (v: boolean) => void
     shower: boolean
     onToggleShower: (v: boolean) => void
-    walkedWithFamily: boolean
-    onToggleWalk: (v: boolean) => void
     startMin: number
     endMin: number
   },
 ) {
   switch (component) {
     case 'MorningRoutine':
-      return <MorningRoutine coffee={props.coffee} onToggleCoffee={props.onToggleCoffee} />
+      return <MorningRoutine />
 
     case 'WorkBlock':
       return <WorkBlock id={block.instanceId} startMin={props.startMin} endMin={props.endMin} />
@@ -199,19 +189,19 @@ function renderBlockContent(
       return <WaterTracker />
 
     case 'FamilyTime':
-      return <FamilyTime walkedWithFamily={props.walkedWithFamily} onToggleWalk={props.onToggleWalk} />
+      return <FamilyTime />
 
     case 'EveningWalk':
-      return <EveningWalk walkedWithFamily={props.walkedWithFamily} />
+      return <EveningWalk />
 
     case 'HardStop':
       return (
         <div className="flex items-start gap-3 rounded-lg border border-destructive/40 bg-destructive/10 p-3">
           <OctagonAlert className="mt-0.5 size-5 shrink-0 text-destructive" />
           <div>
-            <p className="text-sm font-semibold text-destructive">Work stops. Eating window closes.</p>
+            <p className="text-sm font-semibold text-destructive">Hard stop.</p>
             <p className="mt-1 text-xs text-muted-foreground">
-              No more meals or work after this point — family time starts now.
+              {block.subtitle || 'Time to transition — close out and move on.'}
             </p>
           </div>
         </div>

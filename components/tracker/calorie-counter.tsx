@@ -12,6 +12,23 @@ function getCalories(): number {
   if (typeof window === 'undefined') return 0
   const prefix = `daily-habits:${todayKey()}`
   let total = 0
+
+  // Check unified meals key
+  try {
+    const raw = localStorage.getItem(`${prefix}:meals`)
+    if (raw) {
+      const entries = JSON.parse(raw)
+      if (Array.isArray(entries)) {
+        for (const e of entries) {
+          if (e && typeof e.estimatedCalories === 'number' && e.estimatedCalories > 0) {
+            total += e.estimatedCalories
+          }
+        }
+      }
+    }
+  } catch {}
+
+  // Also check legacy per-slot keys for backward compat
   for (const slot of ['meals-breakfast', 'meals-lunch', 'meals-supper']) {
     try {
       const raw = localStorage.getItem(`${prefix}:${slot}`)
@@ -27,23 +44,6 @@ function getCalories(): number {
       }
     } catch {}
   }
-
-  // Also check the old 'meals' key in case data is stored there from before the split
-  try {
-    const oldRaw = localStorage.getItem(`${prefix}:meals`)
-    if (oldRaw) {
-      const entries = JSON.parse(oldRaw)
-      if (Array.isArray(entries)) {
-        for (const e of entries) {
-          if (e && typeof e.estimatedCalories === 'number' && e.estimatedCalories > 0) {
-            total += e.estimatedCalories
-          }
-        }
-      }
-      // Clean up old key to prevent double-counting
-      localStorage.removeItem(`${prefix}:meals`)
-    }
-  } catch {}
 
   return total
 }
