@@ -52,6 +52,12 @@ export function DataManager() {
     e.target.value = ''
   }
 
+  const handleClearAll = () => {
+    if (!confirm('This will delete ALL your data — habits, meals, schedule, settings, everything. This cannot be undone. Are you sure?')) return
+    localStorage.clear()
+    window.location.href = '/app'
+  }
+
   return (
     <div className="mt-8 rounded-lg border border-border/60 bg-secondary/30 p-4">
       <h3 className="mb-3 text-sm font-semibold text-foreground">Data Management</h3>
@@ -63,6 +69,9 @@ export function DataManager() {
         <Button size="sm" variant="secondary" onClick={() => fileInputRef.current?.click()}>
           <Upload className="size-4" />
           Import Data
+        </Button>
+        <Button size="sm" variant="destructive" onClick={handleClearAll}>
+          Clear All Data
         </Button>
         <input
           ref={fileInputRef}
