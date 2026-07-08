@@ -1,14 +1,31 @@
 'use client'
 
 import {
+  Activity,
+  BedDouble,
+  BookOpen,
+  Brain,
   Briefcase,
+  Car,
+  Coffee,
+  Dog,
   Droplets,
   Dumbbell,
   Film,
   Footprints,
+  GraduationCap,
+  Heart,
+  Home,
   Laptop,
+  MessageCircle,
+  MonitorOff,
+  Moon,
   OctagonAlert,
+  Palette,
   Pill,
+  ShoppingCart,
+  Sparkles,
+  SquarePlus,
   Sunrise,
   Users,
   Utensils,
@@ -22,6 +39,7 @@ import type { ScheduleBlock } from '@/lib/schedule-config'
 import { EveningWalk } from './evening-walk'
 import { FamilyTime } from './family-time'
 import { FitnessSection } from './fitness-section'
+import { GenericBlock } from './generic-block'
 import { MealTabs } from './meal-tabs'
 import { MorningRoutine } from './morning-routine'
 import { SupplementChecklist } from './supplement-tracker'
@@ -34,17 +52,34 @@ import { WorkBlock } from './work-block'
 // ─── Icon map ────────────────────────────────────────────────────────────────
 
 const ICON_MAP: Record<string, LucideIcon> = {
-  Sunrise,
+  Activity,
+  BedDouble,
+  BookOpen,
+  Brain,
   Briefcase,
-  Laptop,
-  Utensils,
-  Dumbbell,
+  Car,
+  Coffee,
+  Dog,
   Droplets,
-  Users,
-  Footprints,
-  OctagonAlert,
+  Dumbbell,
   Film,
+  Footprints,
+  GraduationCap,
+  Heart,
+  Home,
+  Laptop,
+  MessageCircle,
+  MonitorOff,
+  Moon,
+  OctagonAlert,
+  Palette,
   Pill,
+  ShoppingCart,
+  Sparkles,
+  SquarePlus,
+  Sunrise,
+  Users,
+  Utensils,
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -191,6 +226,9 @@ function renderBlockContent(
 
     case 'SupplementsEvening':
       return <SupplementChecklist time="evening" />
+
+    case 'GenericBlock':
+      return <GenericBlock id={block.instanceId} />
 
     default:
       return null
