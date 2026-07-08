@@ -1,7 +1,7 @@
 {
-  "name": "Daily Rhythm",
-  "short_name": "Rhythm",
-  "description": "Time-blocked daily routine and habit tracker",
+  "name": "RoutinePro.ai",
+  "short_name": "RoutinePro",
+  "description": "AI-powered daily routine and habit tracker",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#141821",

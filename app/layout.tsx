@@ -7,14 +7,14 @@ const geistSans = Geist({ subsets: ['latin'], variable: '--font-geist-sans' })
 const geistMono = Geist_Mono({ subsets: ['latin'], variable: '--font-geist-mono' })
 
 export const metadata: Metadata = {
-  title: 'Daily Rhythm — Routine & Habit Tracker',
+  title: 'RoutinePro.ai — Your Daily Routine, Optimized',
   description:
-    'A minimalist, time-blocked daily routine and habit tracker.',
+    'AI-powered daily routine and habit tracker. Build time-blocked schedules, track meals, fitness, water, supplements, and more.',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'Daily Rhythm',
+    title: 'RoutinePro.ai',
   },
 }
 

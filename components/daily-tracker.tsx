@@ -102,7 +102,7 @@ export function DailyTracker() {
             onClick={() => view !== 'timeline' && setView('timeline')}
             className={view !== 'timeline' ? 'cursor-pointer' : 'cursor-default'}
           >
-            <h1 className="text-lg font-semibold tracking-tight text-foreground text-left">Daily Rhythm</h1>
+            <h1 className="text-lg font-semibold tracking-tight text-foreground text-left">RoutinePro<span className="text-primary">.ai</span></h1>
             <p className="text-xs text-muted-foreground text-left">
               {today} · {formatTimeOfDay(now)}
               {isWeekend && <span className="ml-2 rounded-full bg-primary/15 px-2 py-0.5 text-primary">Weekend</span>}

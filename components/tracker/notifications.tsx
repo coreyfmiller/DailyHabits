@@ -44,13 +44,13 @@ function checkAndNotify() {
 
   // At 5:45 PM (17:45) — eating window reminder
   if (minutes >= 17 * 60 + 45 && minutes < 17 * 60 + 46 && !sent.has('eating-window')) {
-    new Notification('Daily Rhythm', { body: 'Eating window closing in 15 min' })
+    new Notification('RoutinePro.ai', { body: 'Eating window closing in 15 min' })
     markSent('eating-window')
   }
 
   // At 7:00 PM (19:00) — walk reminder
   if (minutes >= 19 * 60 && minutes < 19 * 60 + 1 && !sent.has('walk') && !isWalkDone()) {
-    new Notification('Daily Rhythm', { body: 'Time for your walk 🚶' })
+    new Notification('RoutinePro.ai', { body: 'Time for your walk 🚶' })
     markSent('walk')
   }
 }
