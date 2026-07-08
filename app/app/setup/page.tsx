@@ -51,12 +51,38 @@ export default function SetupPage() {
 
   function addBlock(blockType: BlockType) {
     const id = `${activeTab === 'weekday' ? 'wd' : 'we'}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
+
+    // Smart start-time: use the end time of the last block as the new start time
+    let startTime = blockType.defaultStartTime
+    let endTime = blockType.defaultEndTime
+
+    if (currentBlocks.length > 0) {
+      const lastBlock = currentBlocks[currentBlocks.length - 1]
+      const lastEnd = lastBlock.endTime
+
+      // Only use smart inference if the last block has a meaningful end time
+      if (lastEnd && lastEnd !== lastBlock.startTime) {
+        startTime = lastEnd
+        // Calculate end time based on the block's default duration
+        if (blockType.defaultDuration > 0) {
+          const [h, m] = lastEnd.split(':').map(Number)
+          const totalMin = h * 60 + m + blockType.defaultDuration
+          const endH = Math.min(Math.floor(totalMin / 60), 23)
+          const endM = totalMin % 60
+          endTime = `${endH.toString().padStart(2, '0')}:${endM.toString().padStart(2, '0')}`
+        } else {
+          // All-day or marker blocks keep their defaults
+          endTime = blockType.defaultEndTime
+        }
+      }
+    }
+
     const newBlock: ScheduleBlock = {
       instanceId: id,
       blockTypeId: blockType.id,
       label: blockType.name,
-      startTime: blockType.defaultStartTime,
-      endTime: blockType.defaultEndTime,
+      startTime,
+      endTime,
       subtitle: blockType.description,
     }
     updateBlocks([...currentBlocks, newBlock])

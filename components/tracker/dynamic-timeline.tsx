@@ -3,10 +3,12 @@
 import {
   Activity,
   BedDouble,
+  BookMarked,
   BookOpen,
   Brain,
   Briefcase,
   Car,
+  ChefHat,
   Coffee,
   Dog,
   Droplets,
@@ -27,6 +29,7 @@ import {
   Sparkles,
   SquarePlus,
   Sunrise,
+  Target,
   Users,
   Utensils,
 } from 'lucide-react'
@@ -54,10 +57,12 @@ import { WorkBlock } from './work-block'
 const ICON_MAP: Record<string, LucideIcon> = {
   Activity,
   BedDouble,
+  BookMarked,
   BookOpen,
   Brain,
   Briefcase,
   Car,
+  ChefHat,
   Coffee,
   Dog,
   Droplets,
@@ -78,6 +83,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
   Sparkles,
   SquarePlus,
   Sunrise,
+  Target,
   Users,
   Utensils,
 }
@@ -226,6 +232,15 @@ function renderBlockContent(
 
     case 'SupplementsEvening':
       return <SupplementChecklist time="evening" />
+
+    case 'Supplements':
+      return (
+        <div className="grid gap-3">
+          <SupplementChecklist time="morning" />
+          <SupplementChecklist time="midday" />
+          <SupplementChecklist time="evening" />
+        </div>
+      )
 
     case 'GenericBlock':
       return <GenericBlock id={block.instanceId} />
