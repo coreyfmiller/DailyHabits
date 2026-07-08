@@ -8,10 +8,14 @@ export default function LandingPage() {
       <section className="mx-auto max-w-4xl px-4 pb-20 pt-16 sm:px-6 sm:pt-24">
         <div className="flex flex-col items-center text-center">
           <img
-            src="/bothlogo.png"
+            src="/lightlogo.png"
             alt="RoutinePro.ai"
-            className="h-20 sm:h-28 mb-8"
-            style={{ filter: 'drop-shadow(0 0 1px rgba(255,255,255,0.8))' }}
+            className="h-20 sm:h-28 mb-8 dark:hidden"
+          />
+          <img
+            src="/darklogo.png"
+            alt="RoutinePro.ai"
+            className="h-20 sm:h-28 mb-8 hidden dark:block"
           />
           <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-5xl">
             Your daily routine,{' '}
