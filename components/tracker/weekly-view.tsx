@@ -1,8 +1,26 @@
 'use client'
 
-import { Briefcase, Check, Coffee, Dumbbell, Footprints, Heart, Laptop, ShowerHead, Utensils } from 'lucide-react'
+import { Briefcase, Check, Coffee, Dumbbell, Footprints, Laptop, ShowerHead, Utensils } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { isMadelynDay } from './calendar-view'
+import { getTagsForDate, type CalendarTag } from './calendar-tags'
+
+const TAG_DOT_CLASSES: Record<string, string> = {
+  pink: 'bg-pink-500',
+  blue: 'bg-blue-500',
+  green: 'bg-green-500',
+  orange: 'bg-orange-500',
+  purple: 'bg-purple-500',
+  red: 'bg-red-500',
+}
+
+const TAG_PILL_CLASSES: Record<string, string> = {
+  pink: 'bg-pink-100 text-pink-700 dark:bg-pink-950 dark:text-pink-300',
+  blue: 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300',
+  green: 'bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300',
+  orange: 'bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300',
+  purple: 'bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300',
+  red: 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300',
+}
 
 type MealEntry = {
   id: number
@@ -17,7 +35,7 @@ type DayData = {
   dayName: string
   isToday: boolean
   isWeekend: boolean
-  isMadelyn: boolean
+  tags: CalendarTag[]
   isPast: boolean
   coffee: boolean
   shower: boolean
@@ -90,7 +108,7 @@ function getDayData(date: Date, todayStr: string): DayData {
     dayName: date.toLocaleDateString([], { weekday: 'short' }),
     isToday: dateStr === todayStr,
     isWeekend: dow === 0 || dow === 6,
-    isMadelyn: isMadelynDay(dateStr),
+    tags: getTagsForDate(dateStr),
     isPast,
     coffee,
     shower,
@@ -183,8 +201,15 @@ export function WeeklyView() {
                   <div className={`mt-0.5 text-sm ${day.isToday ? 'text-primary' : 'text-foreground'}`}>
                     {day.label}
                   </div>
-                  {day.isMadelyn && (
-                    <Heart className="mx-auto mt-0.5 size-3 fill-pink-500 text-pink-500" />
+                  {day.tags.length > 0 && (
+                    <div className="mx-auto mt-0.5 flex gap-0.5 justify-center">
+                      {day.tags.slice(0, 3).map((tag) => (
+                        <span
+                          key={tag.id}
+                          className={`size-2 rounded-full ${TAG_DOT_CLASSES[tag.color] ?? TAG_DOT_CLASSES.pink}`}
+                        />
+                      ))}
+                    </div>
                   )}
                 </th>
               ))}
@@ -277,11 +302,11 @@ export function WeeklyView() {
               {new Date(selected.date + 'T12:00:00').toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' })}
             </h3>
             <div className="flex items-center gap-2">
-              {selected.isMadelyn && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-pink-100 px-2 py-0.5 text-xs text-pink-700 dark:bg-pink-950 dark:text-pink-300">
-                  <Heart className="size-3 fill-pink-500" /> Madelyn
+              {selected.tags.length > 0 && selected.tags.map((tag) => (
+                <span key={tag.id} className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs ${TAG_PILL_CLASSES[tag.color] ?? TAG_PILL_CLASSES.pink}`}>
+                  {tag.name}
                 </span>
-              )}
+              ))}
               {selected.calories > 0 && (
                 <span className="rounded-full bg-primary/15 px-2 py-0.5 font-mono text-xs text-primary">
                   ~{selected.calories} kcal

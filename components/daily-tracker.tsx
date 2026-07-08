@@ -7,7 +7,6 @@ import {
   Dumbbell,
   Film,
   Footprints,
-  Heart,
   LayoutGrid,
   Laptop,
   OctagonAlert,
@@ -20,7 +19,8 @@ import {
 import { useState } from 'react'
 import { useLocalStorage } from '@/lib/use-local-storage'
 import { Button } from '@/components/ui/button'
-import { CalendarView, isMadelynDay } from './tracker/calendar-view'
+import { CalendarView } from './tracker/calendar-view'
+import { CalendarTagsManager, getTagsForToday } from './tracker/calendar-tags'
 import { CalorieCounter } from './tracker/calorie-counter'
 import { DailyProgress } from './tracker/daily-progress'
 import { EveningWalk } from './tracker/evening-walk'
@@ -39,6 +39,16 @@ import { WorkBlock } from './tracker/work-block'
 import { formatTimeOfDay, useNow } from './tracker/use-now'
 import { WaterTracker } from './tracker/water-tracker'
 import { SupplementManager, SupplementChecklist } from './tracker/supplement-tracker'
+
+// Color classes for tag badges in the header
+const TAG_PILL_CLASSES: Record<string, { pill: string; pillDark: string }> = {
+  pink: { pill: 'bg-pink-100 text-pink-700', pillDark: 'dark:bg-pink-950 dark:text-pink-300' },
+  blue: { pill: 'bg-blue-100 text-blue-700', pillDark: 'dark:bg-blue-950 dark:text-blue-300' },
+  green: { pill: 'bg-green-100 text-green-700', pillDark: 'dark:bg-green-950 dark:text-green-300' },
+  orange: { pill: 'bg-orange-100 text-orange-700', pillDark: 'dark:bg-orange-950 dark:text-orange-300' },
+  purple: { pill: 'bg-purple-100 text-purple-700', pillDark: 'dark:bg-purple-950 dark:text-purple-300' },
+  red: { pill: 'bg-red-100 text-red-700', pillDark: 'dark:bg-red-950 dark:text-red-300' },
+}
 
 /** Determine which time block is active based on current minutes */
 function getActiveBlock(minutesNow: number, isWeekend: boolean) {
@@ -76,9 +86,11 @@ export function DailyTracker() {
 
   const dayOfWeek = now.getDay()
   const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
-  const hasMadelyn = isMadelynDay()
   const minutesNow = now.getHours() * 60 + now.getMinutes()
   const activeBlock = getActiveBlock(minutesNow, isWeekend)
+
+  // Get today's calendar tags for the header badge display
+  const todayTags = getTagsForToday()
 
   return (
     <main className="mx-auto min-h-screen w-full max-w-2xl px-4 pb-16 sm:px-6">
@@ -94,7 +106,14 @@ export function DailyTracker() {
             <p className="text-xs text-muted-foreground text-left">
               {today} · {formatTimeOfDay(now)}
               {isWeekend && <span className="ml-2 rounded-full bg-primary/15 px-2 py-0.5 text-primary">Weekend</span>}
-              {hasMadelyn && <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-pink-100 px-2 py-0.5 text-pink-700 dark:bg-pink-950 dark:text-pink-300"><Heart className="size-3 fill-pink-500" />Madelyn</span>}
+              {todayTags.map((tag) => {
+                const colors = TAG_PILL_CLASSES[tag.color] ?? TAG_PILL_CLASSES.pink
+                return (
+                  <span key={tag.id} className={`ml-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 ${colors.pill} ${colors.pillDark}`}>
+                    {tag.name}
+                  </span>
+                )
+              })}
             </p>
           </button>
           <div className="flex items-center gap-2">
@@ -133,16 +152,13 @@ export function DailyTracker() {
       ) : view === 'settings' ? (
         <>
           <RecurringTasksManager />
+          <CalendarTagsManager />
           <SupplementManager />
           <DataManager />
           <NotificationSettings />
         </>
-      ) : isWeekend && hasMadelyn ? (
-        <WeekendMadelynTimeline coffee={coffee} onToggleCoffee={setCoffee} walkedWithFamily={walkedWithFamily} onToggleWalk={setWalkedWithFamily} />
       ) : isWeekend ? (
         <WeekendTimeline coffee={coffee} onToggleCoffee={setCoffee} walkedWithFamily={walkedWithFamily} onToggleWalk={setWalkedWithFamily} />
-      ) : hasMadelyn ? (
-        <WeekdayMadelynTimeline coffee={coffee} onToggleCoffee={setCoffee} walkedWithFamily={walkedWithFamily} onToggleWalk={setWalkedWithFamily} />
       ) : (
         <WeekdayTimeline coffee={coffee} onToggleCoffee={setCoffee} shower={shower} onToggleShower={setShower} walkedWithFamily={walkedWithFamily} onToggleWalk={setWalkedWithFamily} />
       )}
@@ -421,237 +437,6 @@ function WeekendTimeline({ coffee, onToggleCoffee, walkedWithFamily, onToggleWal
           <Film className="mt-0.5 size-5 shrink-0 text-primary" />
           <p className="text-sm text-muted-foreground">
             Relax, watch something good, and enjoy the evening.
-          </p>
-        </div>
-      </TimelineRow>
-    </section>
-  )
-}
-
-function WeekdayMadelynTimeline({ coffee, onToggleCoffee, walkedWithFamily, onToggleWalk }: {
-  coffee: boolean
-  onToggleCoffee: (v: boolean) => void
-  walkedWithFamily: boolean
-  onToggleWalk: (v: boolean) => void
-}) {
-  const now = useNow(60_000)
-  const min = now.getHours() * 60 + now.getMinutes()
-
-  const s = (start: number, end: number): 'past' | 'active' | 'future' => {
-    if (min >= end) return 'past'
-    if (min >= start) return 'active'
-    return 'future'
-  }
-
-  return (
-    <section aria-label="Weekday with Madelyn">
-      <TimelineRow
-        icon={Sunrise}
-        time="6:30 AM – 8:30 AM"
-        title="Morning Routine"
-        subtitle="Ease into the day with Madelyn."
-        accent="primary"
-        status={s(6 * 60 + 30, 8 * 60 + 30)}
-      >
-        <MorningRoutine coffee={coffee} onToggleCoffee={onToggleCoffee} />
-      </TimelineRow>
-
-      <TimelineRow
-        icon={Utensils}
-        time="10:00 AM – 6:00 PM"
-        title="Meals"
-        subtitle="Eating window. Log meals together."
-        accent="primary"
-        status={s(10 * 60, 18 * 60)}
-      >
-        <MealTabs />
-      </TimelineRow>
-
-      <TimelineRow
-        icon={Droplets}
-        time="All Day"
-        title="Water"
-        subtitle="Stay hydrated — 8 glasses."
-        accent="primary"
-        status={min >= 21 * 60 ? 'past' : min >= 6 * 60 + 30 ? 'active' : 'future'}
-      >
-        <WaterTracker />
-      </TimelineRow>
-
-      <TimelineRow
-        icon={Briefcase}
-        time="8:30 AM – 5:00 PM"
-        title="Work"
-        subtitle="Day job while she's at school/activities."
-        accent="primary"
-        status={s(8 * 60 + 30, 17 * 60)}
-      >
-        <WorkBlock id="afternoon" startMin={8 * 60 + 30} endMin={17 * 60} />
-      </TimelineRow>
-
-      <TimelineRow
-        icon={OctagonAlert}
-        time="6:00 PM"
-        title="Eating Window Closes"
-        accent="destructive"
-        status={s(18 * 60, 18 * 60 + 1)}
-      >
-        <div className="flex items-start gap-3 rounded-lg border border-destructive/40 bg-destructive/10 p-3">
-          <OctagonAlert className="mt-0.5 size-5 shrink-0 text-destructive" />
-          <div>
-            <p className="text-sm font-semibold text-destructive">Eating window closes.</p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              No more food — fasting until 10 AM tomorrow.
-            </p>
-          </div>
-        </div>
-      </TimelineRow>
-
-      <TimelineRow
-        icon={Users}
-        time="5:00 PM – 8:00 PM"
-        title="Madelyn Time"
-        subtitle="All in — be present with her."
-        accent="primary"
-        status={s(17 * 60, 20 * 60)}
-      >
-        <FamilyTime walkedWithFamily={walkedWithFamily} onToggleWalk={onToggleWalk} />
-      </TimelineRow>
-
-      <TimelineRow
-        icon={Footprints}
-        time="Evening"
-        title="Walk with Madelyn"
-        subtitle="Get outside together."
-        accent="primary"
-        status={s(17 * 60, 21 * 60)}
-      >
-        <EveningWalk walkedWithFamily={walkedWithFamily} />
-      </TimelineRow>
-
-      <TimelineRow
-        icon={Film}
-        time="8:00 PM – 9:00 PM"
-        title="Wind Down"
-        subtitle="Movie, show, or reading together."
-        accent="primary"
-        status={s(20 * 60, 21 * 60)}
-        isLast
-      >
-        <div className="flex items-start gap-3 rounded-lg border border-border/60 bg-secondary/40 p-3">
-          <Heart className="mt-0.5 size-5 shrink-0 text-pink-500" />
-          <p className="text-sm text-muted-foreground">
-            Quality time before bed. No work tonight.
-          </p>
-        </div>
-      </TimelineRow>
-    </section>
-  )
-}
-
-function WeekendMadelynTimeline({ coffee, onToggleCoffee, walkedWithFamily, onToggleWalk }: {
-  coffee: boolean
-  onToggleCoffee: (v: boolean) => void
-  walkedWithFamily: boolean
-  onToggleWalk: (v: boolean) => void
-}) {
-  const now = useNow(60_000)
-  const min = now.getHours() * 60 + now.getMinutes()
-
-  const s = (start: number, end: number): 'past' | 'active' | 'future' => {
-    if (min >= end) return 'past'
-    if (min >= start) return 'active'
-    return 'future'
-  }
-
-  return (
-    <section aria-label="Weekend with Madelyn">
-      <TimelineRow
-        icon={Sunrise}
-        time="6:30 AM"
-        title="Morning Routine"
-        subtitle="Easy start before she wakes up."
-        accent="primary"
-        status={s(6 * 60 + 30, 7 * 60 + 30)}
-      >
-        <MorningRoutine coffee={coffee} onToggleCoffee={onToggleCoffee} />
-      </TimelineRow>
-
-      <TimelineRow
-        icon={Utensils}
-        time="10:00 AM – 6:00 PM"
-        title="Meals"
-        subtitle="Eating window. Make meals together."
-        accent="primary"
-        status={s(10 * 60, 18 * 60)}
-      >
-        <MealTabs />
-      </TimelineRow>
-
-      <TimelineRow
-        icon={Droplets}
-        time="All Day"
-        title="Water"
-        subtitle="Stay hydrated — 8 glasses."
-        accent="primary"
-        status={min >= 21 * 60 ? 'past' : min >= 6 * 60 + 30 ? 'active' : 'future'}
-      >
-        <WaterTracker />
-      </TimelineRow>
-
-      <TimelineRow
-        icon={Users}
-        time="All Day"
-        title="Madelyn Day"
-        subtitle="She's the priority. Be fully present."
-        accent="primary"
-        status={s(7 * 60 + 30, 20 * 60)}
-      >
-        <FamilyTime walkedWithFamily={walkedWithFamily} onToggleWalk={onToggleWalk} />
-      </TimelineRow>
-
-      <TimelineRow
-        icon={OctagonAlert}
-        time="6:00 PM"
-        title="Eating Window Closes"
-        accent="destructive"
-        status={s(18 * 60, 18 * 60 + 1)}
-      >
-        <div className="flex items-start gap-3 rounded-lg border border-destructive/40 bg-destructive/10 p-3">
-          <OctagonAlert className="mt-0.5 size-5 shrink-0 text-destructive" />
-          <div>
-            <p className="text-sm font-semibold text-destructive">Eating window closes.</p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              No more food — fasting until 10 AM tomorrow.
-            </p>
-          </div>
-        </div>
-      </TimelineRow>
-
-      <TimelineRow
-        icon={Footprints}
-        time="Evening"
-        title="Walk"
-        subtitle="Get outside with Madelyn."
-        accent="primary"
-        status={s(18 * 60, 21 * 60)}
-      >
-        <EveningWalk walkedWithFamily={walkedWithFamily} />
-      </TimelineRow>
-
-      <TimelineRow
-        icon={Film}
-        time="8:00 PM – 10:00 PM"
-        title="Movie Night"
-        subtitle="Cozy up and watch something together."
-        accent="primary"
-        status={s(20 * 60, 22 * 60)}
-        isLast
-      >
-        <div className="flex items-start gap-3 rounded-lg border border-border/60 bg-secondary/40 p-3">
-          <Heart className="mt-0.5 size-5 shrink-0 text-pink-500" />
-          <p className="text-sm text-muted-foreground">
-            Her pick. Popcorn optional.
           </p>
         </div>
       </TimelineRow>

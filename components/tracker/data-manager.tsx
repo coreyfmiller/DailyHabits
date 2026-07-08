@@ -9,7 +9,7 @@ export function DataManager() {
 
   const handleExport = () => {
     const data: Record<string, string> = {}
-    const keysToExport = ['recurring-tasks', 'calendar-events', 'madelyn-days', 'theme']
+    const keysToExport = ['recurring-tasks', 'calendar-events', 'calendar-tags', 'calendar-tag-assignments', 'theme']
 
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i)

@@ -1,11 +1,17 @@
 'use client'
 
-import { ChevronLeft, ChevronRight, Heart, Plus, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Plus, X } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
+import {
+  CalendarTagSelector,
+  getCalendarTags,
+  getTagIdsForDate,
+  toggleTagForDate,
+  type CalendarTag,
+} from './calendar-tags'
 
 const EVENTS_KEY = 'calendar-events'
-const MADELYN_KEY = 'madelyn-days'
 
 export type CalendarEvent = {
   id: number
@@ -29,28 +35,6 @@ function setStoredEvents(events: CalendarEvent[]) {
   } catch {}
 }
 
-function getStoredMadelynDays(): string[] {
-  if (typeof window === 'undefined') return []
-  try {
-    const raw = localStorage.getItem(MADELYN_KEY)
-    return raw ? JSON.parse(raw) : []
-  } catch {
-    return []
-  }
-}
-
-function setStoredMadelynDays(days: string[]) {
-  try {
-    localStorage.setItem(MADELYN_KEY, JSON.stringify(days))
-  } catch {}
-}
-
-/** Check if a date is a Madelyn day */
-export function isMadelynDay(dateStr?: string): boolean {
-  const key = dateStr ?? todayStr()
-  return getStoredMadelynDays().includes(key)
-}
-
 /** Get all events for a specific date (YYYY-MM-DD) */
 export function getEventsForDate(dateStr: string): CalendarEvent[] {
   return getStoredEvents().filter((e) => e.date === dateStr)
@@ -72,19 +56,18 @@ export function CalendarView() {
     return { year: d.getFullYear(), month: d.getMonth() }
   })
   const [events, setEvents] = useState<CalendarEvent[]>(getStoredEvents)
-  const [madelynDays, setMadelynDays] = useState<string[]>(getStoredMadelynDays)
-  const [madelynMode, setMadelynMode] = useState(false)
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const [draft, setDraft] = useState('')
+  const [activeTagId, setActiveTagId] = useState<string | null>(null)
+  const [tagVersion, setTagVersion] = useState(0) // bump to re-render after tag toggles
 
   useEffect(() => { setStoredEvents(events) }, [events])
-  useEffect(() => { setStoredMadelynDays(madelynDays) }, [madelynDays])
 
-  const toggleMadelynDay = useCallback((dateKey: string) => {
-    setMadelynDays((prev) =>
-      prev.includes(dateKey) ? prev.filter((d) => d !== dateKey) : [...prev, dateKey]
-    )
-  }, [])
+  const handleToggleTag = useCallback((dateKey: string) => {
+    if (!activeTagId) return
+    toggleTagForDate(dateKey, activeTagId)
+    setTagVersion((v) => v + 1)
+  }, [activeTagId])
 
   const addEvent = useCallback(() => {
     const text = draft.trim()
@@ -112,8 +95,8 @@ export function CalendarView() {
   }
 
   const handleDayClick = (dateKey: string) => {
-    if (madelynMode) {
-      toggleMadelynDay(dateKey)
+    if (activeTagId) {
+      handleToggleTag(dateKey)
     } else {
       setSelectedDate(dateKey === selectedDate ? null : dateKey)
     }
@@ -131,35 +114,31 @@ export function CalendarView() {
   for (let d = 1; d <= daysInMonth; d++) cells.push(d)
 
   const todayKey = todayStr()
+  const allTags = getCalendarTags()
 
   const selectedDateEvents = selectedDate ? events.filter((e) => e.date === selectedDate) : []
   const selectedLabel = selectedDate
     ? new Date(selectedDate + 'T12:00:00').toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })
     : null
 
+  // Get tags for selected date
+  const selectedDateTagIds = selectedDate ? getTagIdsForDate(selectedDate) : []
+  const selectedDateTags = allTags.filter((t) => selectedDateTagIds.includes(t.id))
+
+  // Color helper
+  const COLOR_CLASSES: Record<string, { dot: string; pill: string; pillDark: string }> = {
+    pink: { dot: 'bg-pink-500', pill: 'bg-pink-100 text-pink-700', pillDark: 'dark:bg-pink-950 dark:text-pink-300' },
+    blue: { dot: 'bg-blue-500', pill: 'bg-blue-100 text-blue-700', pillDark: 'dark:bg-blue-950 dark:text-blue-300' },
+    green: { dot: 'bg-green-500', pill: 'bg-green-100 text-green-700', pillDark: 'dark:bg-green-950 dark:text-green-300' },
+    orange: { dot: 'bg-orange-500', pill: 'bg-orange-100 text-orange-700', pillDark: 'dark:bg-orange-950 dark:text-orange-300' },
+    purple: { dot: 'bg-purple-500', pill: 'bg-purple-100 text-purple-700', pillDark: 'dark:bg-purple-950 dark:text-purple-300' },
+    red: { dot: 'bg-red-500', pill: 'bg-red-100 text-red-700', pillDark: 'dark:bg-red-950 dark:text-red-300' },
+  }
+
   return (
     <div className="grid gap-4">
-      {/* Madelyn mode toggle */}
-      <div className="flex items-center justify-between rounded-lg border border-border/60 bg-secondary/40 p-3">
-        <div className="flex items-center gap-2">
-          <Heart className={`size-4 ${madelynMode ? 'fill-pink-500 text-pink-500' : 'text-muted-foreground'}`} />
-          <div>
-            <p className="text-sm font-medium text-foreground">Madelyn days</p>
-            <p className="text-xs text-muted-foreground">
-              {madelynMode ? 'Tap dates to toggle her days' : 'Click the heart to start marking days'}
-            </p>
-          </div>
-        </div>
-        <Button
-          size="sm"
-          variant={madelynMode ? 'default' : 'secondary'}
-          onClick={() => setMadelynMode(!madelynMode)}
-          className={madelynMode ? 'bg-pink-500 hover:bg-pink-600' : ''}
-        >
-          <Heart className={`size-4 ${madelynMode ? 'fill-white' : ''}`} />
-          {madelynMode ? 'Done' : 'Mark days'}
-        </Button>
-      </div>
+      {/* Tag selector */}
+      <CalendarTagSelector activeTagId={activeTagId} onSelectTag={setActiveTagId} />
 
       {/* Month nav */}
       <div className="flex items-center justify-between">
@@ -186,49 +165,66 @@ export function CalendarView() {
 
           const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
           const hasEvents = events.some((e) => e.date === dateKey)
-          const isMadelyn = madelynDays.includes(dateKey)
+          const dateTagIds = getTagIdsForDate(dateKey)
+          const dateTags = allTags.filter((t) => dateTagIds.includes(t.id))
           const isToday = dateKey === todayKey
-          const isSelected = dateKey === selectedDate && !madelynMode
+          const isSelected = dateKey === selectedDate && !activeTagId
+
+          // Force re-read on tagVersion change
+          void tagVersion
 
           return (
             <button
               key={dateKey}
               type="button"
               onClick={() => handleDayClick(dateKey)}
-              className={`relative flex size-10 items-center justify-center rounded-lg text-sm transition-colors ${
+              className={`relative flex flex-col items-center justify-center size-10 rounded-lg text-sm transition-colors ${
                 isSelected
                   ? 'bg-primary text-primary-foreground font-medium'
-                  : isMadelyn
-                    ? 'bg-pink-100 text-pink-700 font-medium dark:bg-pink-950 dark:text-pink-300'
-                    : isToday
-                      ? 'ring-2 ring-primary/40 text-foreground'
-                      : 'hover:bg-secondary/60 text-foreground'
-              } ${madelynMode ? 'cursor-pointer' : ''}`}
-              aria-label={`${monthLabel} ${day}${isMadelyn ? ' (Madelyn day)' : ''}${hasEvents ? ' (has events)' : ''}`}
+                  : isToday
+                    ? 'ring-2 ring-primary/40 text-foreground'
+                    : 'hover:bg-secondary/60 text-foreground'
+              } ${activeTagId ? 'cursor-pointer' : ''}`}
+              aria-label={`${monthLabel} ${day}${dateTags.length > 0 ? ` (${dateTags.map((t) => t.name).join(', ')})` : ''}${hasEvents ? ' (has events)' : ''}`}
             >
-              {day}
-              {isMadelyn && (
-                <Heart className="absolute -top-0.5 -right-0.5 size-3 fill-pink-500 text-pink-500" />
+              <span>{day}</span>
+              {/* Tag dots */}
+              {dateTags.length > 0 && (
+                <span className="absolute bottom-0.5 flex gap-0.5">
+                  {dateTags.slice(0, 3).map((tag) => (
+                    <span
+                      key={tag.id}
+                      className={`size-1.5 rounded-full ${(COLOR_CLASSES[tag.color] ?? COLOR_CLASSES.pink).dot}`}
+                    />
+                  ))}
+                </span>
               )}
-              {hasEvents && !isSelected && !isMadelyn && (
-                <span className="absolute bottom-1 left-1/2 size-1.5 -translate-x-1/2 rounded-full bg-primary" />
+              {/* Event dot (only if no tags shown) */}
+              {hasEvents && dateTags.length === 0 && !isSelected && (
+                <span className="absolute bottom-0.5 left-1/2 size-1.5 -translate-x-1/2 rounded-full bg-primary" />
               )}
             </button>
           )
         })}
       </div>
 
-      {/* Selected date panel (only in normal mode) */}
-      {!madelynMode && selectedDate && (
+      {/* Selected date panel (only when not in tag mode) */}
+      {!activeTagId && selectedDate && (
         <div className="rounded-lg border border-border/60 bg-secondary/40 p-3">
-          <p className="text-sm font-medium text-foreground">
-            {selectedLabel}
-            {madelynDays.includes(selectedDate) && (
-              <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-pink-100 px-2 py-0.5 text-xs text-pink-700 dark:bg-pink-950 dark:text-pink-300">
-                <Heart className="size-3 fill-pink-500" /> Madelyn
-              </span>
-            )}
-          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-sm font-medium text-foreground">{selectedLabel}</p>
+            {selectedDateTags.map((tag) => {
+              const colors = COLOR_CLASSES[tag.color] ?? COLOR_CLASSES.pink
+              return (
+                <span
+                  key={tag.id}
+                  className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${colors.pill} ${colors.pillDark}`}
+                >
+                  {tag.name}
+                </span>
+              )
+            })}
+          </div>
 
           {selectedDateEvents.length > 0 && (
             <ul className="mt-2 grid gap-1.5">
@@ -269,28 +265,45 @@ export function CalendarView() {
         </div>
       )}
 
-      {/* Today's events summary */}
-      {!madelynMode && !selectedDate && (
+      {/* Today's summary (when no date selected and not in tag mode) */}
+      {!activeTagId && !selectedDate && (
         <div className="rounded-lg border border-border/60 bg-secondary/40 p-3">
-          {madelynDays.includes(todayKey) && (
-            <p className="flex items-center gap-1.5 text-xs text-pink-600 dark:text-pink-400">
-              <Heart className="size-3.5 fill-pink-500" />
-              Madelyn is with you today
-            </p>
-          )}
-          {events.filter((e) => e.date === todayKey).length > 0 && (
-            <div className={madelynDays.includes(todayKey) ? 'mt-2' : ''}>
-              <p className="text-xs font-medium text-foreground">Today&apos;s events</p>
-              <ul className="mt-1.5 grid gap-1">
-                {events.filter((e) => e.date === todayKey).map((event) => (
-                  <li key={event.id} className="text-xs text-muted-foreground">• {event.text}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-          {!madelynDays.includes(todayKey) && events.filter((e) => e.date === todayKey).length === 0 && (
-            <p className="text-xs text-muted-foreground">No events today. Tap a date to add events.</p>
-          )}
+          {(() => {
+            const todayTags = allTags.filter((t) => getTagIdsForDate(todayKey).includes(t.id))
+            const todayEvents = events.filter((e) => e.date === todayKey)
+            if (todayTags.length === 0 && todayEvents.length === 0) {
+              return <p className="text-xs text-muted-foreground">No events today. Tap a date to add events.</p>
+            }
+            return (
+              <>
+                {todayTags.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mb-2">
+                    {todayTags.map((tag) => {
+                      const colors = COLOR_CLASSES[tag.color] ?? COLOR_CLASSES.pink
+                      return (
+                        <span
+                          key={tag.id}
+                          className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${colors.pill} ${colors.pillDark}`}
+                        >
+                          {tag.name}
+                        </span>
+                      )
+                    })}
+                  </div>
+                )}
+                {todayEvents.length > 0 && (
+                  <div>
+                    <p className="text-xs font-medium text-foreground">Today&apos;s events</p>
+                    <ul className="mt-1.5 grid gap-1">
+                      {todayEvents.map((event) => (
+                        <li key={event.id} className="text-xs text-muted-foreground">• {event.text}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </>
+            )
+          })()}
         </div>
       )}
     </div>
