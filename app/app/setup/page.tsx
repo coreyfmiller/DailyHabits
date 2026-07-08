@@ -1,6 +1,6 @@
 'use client'
 
-import { ArrowDown, ArrowUp, ChevronLeft, Plus, Save, X } from 'lucide-react'
+import { ArrowDown, ArrowUp, ChevronLeft, Loader2, Plus, Save, Sparkles, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
@@ -21,6 +21,8 @@ const CATEGORY_COLORS: Record<string, string> = {
   meals: 'bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300',
   social: 'bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300',
   rest: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300',
+  focus: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-950 dark:text-cyan-300',
+  custom: 'bg-gray-100 text-gray-700 dark:bg-gray-900 dark:text-gray-300',
 }
 
 export default function SetupPage() {
@@ -31,14 +33,58 @@ export default function SetupPage() {
     weekday: [],
     weekend: [],
   })
+  const [aiPrompt, setAiPrompt] = useState('')
+  const [aiLoading, setAiLoading] = useState(false)
+  const [aiError, setAiError] = useState('')
+  const [showAiBuilder, setShowAiBuilder] = useState(false)
 
   useEffect(() => {
     if (!hasScheduleConfig()) {
       setIsFirstTime(true)
+      setShowAiBuilder(true)
     } else {
       setConfig(getScheduleConfig())
     }
   }, [])
+
+  async function handleAiBuild() {
+    if (!aiPrompt.trim()) return
+    setAiLoading(true)
+    setAiError('')
+    try {
+      const res = await fetch('/api/schedule', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ description: aiPrompt }),
+      })
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || 'Failed to build schedule')
+      }
+      const schedule = await res.json()
+
+      // Convert AI output to ScheduleBlocks with instance IDs
+      const toBlocks = (blocks: Array<{ blockTypeId: string; label: string; startTime: string; endTime: string; subtitle: string }>, prefix: string): ScheduleBlock[] =>
+        blocks.map((b, i) => ({
+          instanceId: `${prefix}-${Date.now()}-${i}-${Math.random().toString(36).slice(2, 6)}`,
+          blockTypeId: b.blockTypeId,
+          label: b.label,
+          startTime: b.startTime,
+          endTime: b.endTime,
+          subtitle: b.subtitle,
+        }))
+
+      setConfig({
+        weekday: toBlocks(schedule.weekday || [], 'wd'),
+        weekend: toBlocks(schedule.weekend || [], 'we'),
+      })
+      setShowAiBuilder(false)
+    } catch (err) {
+      setAiError(err instanceof Error ? err.message : 'Something went wrong')
+    } finally {
+      setAiLoading(false)
+    }
+  }
 
   const currentBlocks = activeTab === 'weekday' ? config.weekday : config.weekend
 
@@ -124,11 +170,67 @@ export default function SetupPage() {
         <h1 className="text-2xl font-bold text-foreground">Build Your Schedule</h1>
         {isFirstTime && (
           <p className="mt-2 text-sm text-muted-foreground">
-            Welcome to RoutinePro.ai! Let&apos;s build your daily schedule. Pick from the blocks below
-            and arrange them in the order you want.
+            Welcome to RoutinePro.ai! Tell us about your day and we&apos;ll build your schedule,
+            or pick from the blocks below and arrange them yourself.
           </p>
         )}
       </header>
+
+      {/* AI Schedule Builder */}
+      {showAiBuilder && (
+        <div className="mb-8 rounded-xl border border-primary/20 bg-gradient-to-br from-primary/5 via-primary/10 to-primary/5 p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <Sparkles className="size-5 text-primary" />
+            <h2 className="text-base font-semibold text-foreground">AI Schedule Builder</h2>
+          </div>
+          <p className="text-sm text-muted-foreground mb-4">
+            Describe your typical day, your goals, and what matters to you. The more detail, the better the schedule.
+          </p>
+          <textarea
+            value={aiPrompt}
+            onChange={(e) => setAiPrompt(e.target.value)}
+            disabled={aiLoading}
+            rows={5}
+            placeholder={"e.g. I wake up around 6:30, work a 9-5 office job with a 30 min commute. I want to work out in the morning before work, eat healthy (I do intermittent fasting 10am-6pm), and spend evenings with my family. I'd like to read before bed and meditate in the morning. On weekends I do meal prep and have more family time."}
+            className="w-full resize-none rounded-lg border border-border bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/60 disabled:opacity-60"
+          />
+          {aiError && (
+            <p className="mt-2 text-sm text-destructive">{aiError}</p>
+          )}
+          <div className="mt-3 flex items-center gap-3">
+            <Button onClick={handleAiBuild} disabled={aiLoading || !aiPrompt.trim()}>
+              {aiLoading ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" />
+                  Building...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="size-4" />
+                  Build My Schedule
+                </>
+              )}
+            </Button>
+            <button
+              type="button"
+              onClick={() => setShowAiBuilder(false)}
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              I&apos;ll do it manually
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Show AI builder toggle when not visible */}
+      {!showAiBuilder && (
+        <div className="mb-6">
+          <Button size="sm" variant="outline" onClick={() => setShowAiBuilder(true)}>
+            <Sparkles className="size-4" />
+            Build with AI
+          </Button>
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="mb-6 flex gap-1 rounded-lg bg-secondary/60 p-1">
