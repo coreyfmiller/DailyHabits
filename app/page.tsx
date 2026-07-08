@@ -8,12 +8,12 @@ export default function LandingPage() {
       <section className="mx-auto max-w-4xl px-4 pb-20 pt-16 sm:px-6 sm:pt-24">
         <div className="flex flex-col items-center text-center">
           <img
-            src="/lightlogo.png"
+            src="/darklogo.png"
             alt="RoutinePro.ai"
             className="h-20 sm:h-28 mb-8 dark:hidden"
           />
           <img
-            src="/darklogo.png"
+            src="/lightlogo.png"
             alt="RoutinePro.ai"
             className="h-20 sm:h-28 mb-8 hidden dark:block"
           />

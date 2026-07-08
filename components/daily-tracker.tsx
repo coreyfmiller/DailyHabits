@@ -63,8 +63,8 @@ export function DailyTracker() {
             onClick={() => view !== 'timeline' && setView('timeline')}
             className={view !== 'timeline' ? 'cursor-pointer' : 'cursor-default'}
           >
-            <img src="/lighttextlogo.png" alt="RoutinePro.ai" className="h-6 dark:hidden" />
-            <img src="/darktextlogo.png" alt="RoutinePro.ai" className="h-6 hidden dark:block" />
+            <img src="/darktextlogo.png" alt="RoutinePro.ai" className="h-6 dark:hidden" />
+            <img src="/lighttextlogo.png" alt="RoutinePro.ai" className="h-6 hidden dark:block" />
             <p className="text-xs text-muted-foreground text-left">
               {today} · {formatTimeOfDay(now)}
               {isWeekend && <span className="ml-2 rounded-full bg-primary/15 px-2 py-0.5 text-primary">Weekend</span>}
