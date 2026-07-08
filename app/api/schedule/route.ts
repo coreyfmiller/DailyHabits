@@ -12,8 +12,7 @@ const blockSchema = z.object({
 })
 
 const scheduleSchema = z.object({
-  weekday: z.array(blockSchema).describe('Blocks for a typical weekday, ordered chronologically'),
-  weekend: z.array(blockSchema).describe('Blocks for a typical weekend day, ordered chronologically'),
+  blocks: z.array(blockSchema).describe('Blocks for the described schedule, ordered chronologically'),
 })
 
 const AVAILABLE_BLOCKS = `
@@ -60,25 +59,29 @@ Rules:
 5. The "water" and "supplements" blocks are all-day trackers — give them wide time ranges (e.g. 06:30-21:00).
 6. The "meals" block is also all-day — it tracks breakfast/lunch/dinner across the eating window.
 7. "hard-stop" is a marker, not a duration — startTime and endTime should be the same.
-8. Create BOTH a weekday and weekend schedule. The weekend should be more relaxed.
-9. Be practical. A typical day has 6-12 blocks, not 25.
-10. Match the user's tone and priorities. If they emphasize fitness, give it prominent placement. If they value family, make sure that's well-represented.
-11. Times should be in 24-hour HH:MM format.
-12. Keep labels short (2-4 words) and subtitles to one sentence.`
+8. Be practical. A typical day has 6-12 blocks, not 25.
+9. Match the user's tone and priorities. If they emphasize fitness, give it prominent placement. If they value family, make sure that's well-represented.
+10. Times should be in 24-hour HH:MM format.
+11. Keep labels short (2-4 words) and subtitles to one sentence.`
 
 export async function POST(req: Request) {
-  const { description } = (await req.json()) as { description?: string }
+  const { description, type } = (await req.json()) as { description?: string; type?: 'weekday' | 'weekend' }
 
   if (!description || !description.trim()) {
     return Response.json({ error: 'Description is required' }, { status: 400 })
   }
+
+  const scheduleType = type === 'weekend' ? 'weekend' : 'weekday'
+  const contextNote = scheduleType === 'weekend'
+    ? 'Build a WEEKEND schedule. Weekends are typically more relaxed — less work, more leisure, family, hobbies, and recovery.'
+    : 'Build a WEEKDAY schedule. Focus on productivity, work, and daily habits.'
 
   try {
     const { output } = await generateText({
       model: 'openai/gpt-5.4-mini',
       output: Output.object({ schema: scheduleSchema }),
       system: SYSTEM_PROMPT,
-      prompt: `Here's what the user said about their day:\n\n"${description}"\n\nBuild their optimal daily schedule.`,
+      prompt: `${contextNote}\n\nHere's what the user said about their day:\n\n"${description}"\n\nBuild their optimal ${scheduleType} schedule.`,
     })
 
     return Response.json(output)

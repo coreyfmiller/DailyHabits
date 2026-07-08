@@ -34,6 +34,7 @@ export default function SetupPage() {
     weekend: [],
   })
   const [aiPrompt, setAiPrompt] = useState('')
+  const [aiWeekendPrompt, setAiWeekendPrompt] = useState('')
   const [aiLoading, setAiLoading] = useState(false)
   const [aiError, setAiError] = useState('')
   const [showAiBuilder, setShowAiBuilder] = useState(false)
@@ -48,14 +49,15 @@ export default function SetupPage() {
   }, [])
 
   async function handleAiBuild() {
-    if (!aiPrompt.trim()) return
+    const prompt = activeTab === 'weekday' ? aiPrompt : aiWeekendPrompt
+    if (!prompt.trim()) return
     setAiLoading(true)
     setAiError('')
     try {
       const res = await fetch('/api/schedule', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ description: aiPrompt }),
+        body: JSON.stringify({ description: prompt, type: activeTab }),
       })
       if (!res.ok) {
         const data = await res.json()
@@ -64,20 +66,20 @@ export default function SetupPage() {
       const schedule = await res.json()
 
       // Convert AI output to ScheduleBlocks with instance IDs
-      const toBlocks = (blocks: Array<{ blockTypeId: string; label: string; startTime: string; endTime: string; subtitle: string }>, prefix: string): ScheduleBlock[] =>
-        blocks.map((b, i) => ({
-          instanceId: `${prefix}-${Date.now()}-${i}-${Math.random().toString(36).slice(2, 6)}`,
-          blockTypeId: b.blockTypeId,
-          label: b.label,
-          startTime: b.startTime,
-          endTime: b.endTime,
-          subtitle: b.subtitle,
-        }))
+      const prefix = activeTab === 'weekday' ? 'wd' : 'we'
+      const blocks: ScheduleBlock[] = (schedule.blocks || []).map((b: { blockTypeId: string; label: string; startTime: string; endTime: string; subtitle: string }, i: number) => ({
+        instanceId: `${prefix}-${Date.now()}-${i}-${Math.random().toString(36).slice(2, 6)}`,
+        blockTypeId: b.blockTypeId,
+        label: b.label,
+        startTime: b.startTime,
+        endTime: b.endTime,
+        subtitle: b.subtitle,
+      }))
 
-      setConfig({
-        weekday: toBlocks(schedule.weekday || [], 'wd'),
-        weekend: toBlocks(schedule.weekend || [], 'we'),
-      })
+      setConfig((prev) => ({
+        ...prev,
+        [activeTab]: blocks,
+      }))
       setShowAiBuilder(false)
     } catch (err) {
       setAiError(err instanceof Error ? err.message : 'Something went wrong')
@@ -176,29 +178,54 @@ export default function SetupPage() {
         )}
       </header>
 
+      {/* Tabs */}
+      <div className="mb-6 flex gap-1 rounded-lg bg-secondary/60 p-1">
+        {(['weekday', 'weekend'] as const).map((tab) => (
+          <button
+            key={tab}
+            type="button"
+            onClick={() => setActiveTab(tab)}
+            className={cn(
+              'flex-1 rounded-md px-4 py-2 text-sm font-medium transition-colors capitalize',
+              activeTab === tab
+                ? 'bg-background text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground',
+            )}
+          >
+            {tab}
+          </button>
+        ))}
+      </div>
+
       {/* AI Schedule Builder */}
       {showAiBuilder && (
         <div className="mb-8 rounded-xl border border-primary/20 bg-gradient-to-br from-primary/5 via-primary/10 to-primary/5 p-5">
           <div className="flex items-center gap-2 mb-3">
             <Sparkles className="size-5 text-primary" />
-            <h2 className="text-base font-semibold text-foreground">AI Schedule Builder</h2>
+            <h2 className="text-base font-semibold text-foreground">
+              AI Schedule Builder — {activeTab === 'weekday' ? 'Weekday' : 'Weekend'}
+            </h2>
           </div>
           <p className="text-sm text-muted-foreground mb-4">
-            Describe your typical day, your goals, and what matters to you. The more detail, the better the schedule.
+            {activeTab === 'weekday'
+              ? 'Describe your typical weekday — work, habits, goals, and priorities.'
+              : 'Describe your ideal weekend — how you rest, recharge, and spend your time off.'}
           </p>
           <textarea
-            value={aiPrompt}
-            onChange={(e) => setAiPrompt(e.target.value)}
+            value={activeTab === 'weekday' ? aiPrompt : aiWeekendPrompt}
+            onChange={(e) => activeTab === 'weekday' ? setAiPrompt(e.target.value) : setAiWeekendPrompt(e.target.value)}
             disabled={aiLoading}
             rows={5}
-            placeholder={"e.g. I wake up around 6:30, work a 9-5 office job with a 30 min commute. I want to work out in the morning before work, eat healthy (I do intermittent fasting 10am-6pm), and spend evenings with my family. I'd like to read before bed and meditate in the morning. On weekends I do meal prep and have more family time."}
+            placeholder={activeTab === 'weekday'
+              ? "e.g. I wake up around 6:30, work a 9-5 office job with a 30 min commute. I want to work out in the morning before work, eat healthy (I do intermittent fasting 10am-6pm), and spend evenings with my family. I'd like to read before bed and meditate in the morning."
+              : "e.g. I sleep in until 8, do meal prep in the morning, spend the afternoon with family. I like to get a long walk in, maybe do some creative work or side projects. Evenings are for movies or games. I keep the same eating window as weekdays."}
             className="w-full resize-none rounded-lg border border-border bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/60 disabled:opacity-60"
           />
           {aiError && (
             <p className="mt-2 text-sm text-destructive">{aiError}</p>
           )}
           <div className="mt-3 flex items-center gap-3">
-            <Button onClick={handleAiBuild} disabled={aiLoading || !aiPrompt.trim()}>
+            <Button onClick={handleAiBuild} disabled={aiLoading || !(activeTab === 'weekday' ? aiPrompt : aiWeekendPrompt).trim()}>
               {aiLoading ? (
                 <>
                   <Loader2 className="size-4 animate-spin" />
@@ -207,7 +234,7 @@ export default function SetupPage() {
               ) : (
                 <>
                   <Sparkles className="size-4" />
-                  Build My Schedule
+                  Build {activeTab === 'weekday' ? 'Weekday' : 'Weekend'} Schedule
                 </>
               )}
             </Button>
@@ -231,25 +258,6 @@ export default function SetupPage() {
           </Button>
         </div>
       )}
-
-      {/* Tabs */}
-      <div className="mb-6 flex gap-1 rounded-lg bg-secondary/60 p-1">
-        {(['weekday', 'weekend'] as const).map((tab) => (
-          <button
-            key={tab}
-            type="button"
-            onClick={() => setActiveTab(tab)}
-            className={cn(
-              'flex-1 rounded-md px-4 py-2 text-sm font-medium transition-colors capitalize',
-              activeTab === tab
-                ? 'bg-background text-foreground shadow-sm'
-                : 'text-muted-foreground hover:text-foreground',
-            )}
-          >
-            {tab}
-          </button>
-        ))}
-      </div>
 
       {/* Current schedule */}
       <div className="mb-8">
