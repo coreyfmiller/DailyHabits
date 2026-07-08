@@ -143,14 +143,14 @@ export function WorkoutSetup() {
           Workout Routines
         </div>
         <Button size="xs" variant="ghost" onClick={() => setShowTemplates((v) => !v)}>
-          Templates
+          Reset / Templates
         </Button>
       </div>
 
       {/* Template picker */}
       {showTemplates && (
         <div className="mt-3 grid gap-2">
-          <p className="text-xs text-muted-foreground">Choose a starter template:</p>
+          <p className="text-xs text-muted-foreground">Pick a template to replace your current routines:</p>
           {Object.entries(TEMPLATES).map(([key, tmpl]) => (
             <button
               key={key}
