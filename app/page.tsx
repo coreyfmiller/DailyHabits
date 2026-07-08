@@ -11,6 +11,7 @@ export default function LandingPage() {
             src="/bothlogo.png"
             alt="RoutinePro.ai"
             className="h-20 sm:h-28 mb-8"
+            style={{ filter: 'drop-shadow(0 0 1px rgba(255,255,255,0.8))' }}
           />
           <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-5xl">
             Your daily routine,{' '}
