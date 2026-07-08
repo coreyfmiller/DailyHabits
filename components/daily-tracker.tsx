@@ -2,14 +2,16 @@
 
 import {
   Calendar,
+  Dumbbell,
   LayoutGrid,
   Pencil,
   Settings,
   X,
 } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { getScheduleConfig } from '@/lib/schedule-config'
+import { getScheduleConfig, hasScheduleConfig } from '@/lib/schedule-config'
 import { CalendarView } from './tracker/calendar-view'
 import { CalendarTagsManager, getTagsForToday } from './tracker/calendar-tags'
 import { CalorieCounter } from './tracker/calorie-counter'
@@ -37,7 +39,19 @@ const TAG_PILL_CLASSES: Record<string, { pill: string; pillDark: string }> = {
 
 export function DailyTracker() {
   const now = useNow(1000)
+  const router = useRouter()
   const [view, setView] = useState<'timeline' | 'calendar' | 'weekly' | 'settings'>('timeline')
+  const [ready, setReady] = useState(false)
+
+  useEffect(() => {
+    if (!hasScheduleConfig()) {
+      router.replace('/app/setup')
+    } else {
+      setReady(true)
+    }
+  }, [router])
+
+  if (!ready) return null
 
   const today = now.toLocaleDateString([], {
     weekday: 'long',
@@ -64,8 +78,8 @@ export function DailyTracker() {
             onClick={() => view !== 'timeline' && setView('timeline')}
             className={view !== 'timeline' ? 'cursor-pointer' : 'cursor-default'}
           >
-            <img src="/darktextlogo.png" alt="RoutinePro.ai" className="h-6 dark:hidden" />
-            <img src="/lighttextlogo.png" alt="RoutinePro.ai" className="h-6 hidden dark:block" />
+            <img src="/lighttextlogo.png" alt="RoutinePro.ai" className="h-6 dark:hidden" />
+            <img src="/darktextlogo.png" alt="RoutinePro.ai" className="h-6 hidden dark:block" />
             <p className="text-xs text-muted-foreground text-left">
               {today} · {formatTimeOfDay(now)}
               {isWeekend && <span className="ml-2 rounded-full bg-primary/15 px-2 py-0.5 text-primary">Weekend</span>}
@@ -122,6 +136,16 @@ export function DailyTracker() {
             <div>
               <p className="text-sm font-semibold text-foreground">Edit Schedule</p>
               <p className="text-xs text-muted-foreground">Add, remove, or reorder blocks in your daily timeline.</p>
+            </div>
+          </a>
+          <a
+            href="/app/workouts"
+            className="flex items-center gap-3 rounded-lg border border-primary/40 bg-primary/5 p-4 transition-colors hover:bg-primary/10"
+          >
+            <Dumbbell className="size-5 text-primary" />
+            <div>
+              <p className="text-sm font-semibold text-foreground">Workout Manager</p>
+              <p className="text-xs text-muted-foreground">Build routines, browse templates, and manage your training program.</p>
             </div>
           </a>
           <RecurringTasksManager />

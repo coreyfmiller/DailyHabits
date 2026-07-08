@@ -55,7 +55,7 @@ export function DataManager() {
   const handleClearAll = () => {
     if (!confirm('This will delete ALL your data — habits, meals, schedule, settings, everything. This cannot be undone. Are you sure?')) return
     localStorage.clear()
-    window.location.href = '/app'
+    window.location.href = '/app/setup'
   }
 
   return (
