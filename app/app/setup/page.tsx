@@ -7,8 +7,6 @@ import { Button } from '@/components/ui/button'
 import { BLOCK_REGISTRY } from '@/lib/block-registry'
 import type { BlockType } from '@/lib/block-registry'
 import {
-  DEFAULT_WEEKDAY,
-  DEFAULT_WEEKEND,
   getScheduleConfig,
   hasScheduleConfig,
   setScheduleConfig,
@@ -30,8 +28,8 @@ export default function SetupPage() {
   const [isFirstTime, setIsFirstTime] = useState(false)
   const [activeTab, setActiveTab] = useState<'weekday' | 'weekend'>('weekday')
   const [config, setConfig] = useState<ScheduleConfig>({
-    weekday: DEFAULT_WEEKDAY,
-    weekend: DEFAULT_WEEKEND,
+    weekday: [],
+    weekend: [],
   })
 
   useEffect(() => {
