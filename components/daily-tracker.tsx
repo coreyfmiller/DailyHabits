@@ -22,6 +22,7 @@ import { NotificationSettings } from './tracker/notifications'
 import { RecurringTasksManager } from './tracker/recurring-tasks'
 import { StreakCounter } from './tracker/streak-counter'
 import { SupplementManager } from './tracker/supplement-tracker'
+import { NutritionSettings } from './tracker/nutrition-settings'
 import { ThemeToggle } from './tracker/theme-toggle'
 import { WeeklyView } from './tracker/weekly-view'
 import { WorkoutSetup } from './tracker/workout-setup'
@@ -151,6 +152,7 @@ export function DailyTracker() {
           <RecurringTasksManager />
           <CalendarTagsManager />
           <WorkoutSetup />
+          <NutritionSettings />
           <SupplementManager />
           <DataManager />
           <NotificationSettings />

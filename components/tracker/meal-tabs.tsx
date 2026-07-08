@@ -1,9 +1,10 @@
 'use client'
 
-import { Loader2, Sparkles, Utensils, X } from 'lucide-react'
+import { Loader2, Sparkles, Timer, Utensils, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { useLocalStorage } from '@/lib/use-local-storage'
+import { getNutritionConfig, isInEatingWindow, timeUntilWindow, formatTime12 } from '@/lib/nutrition-config'
 import { formatTimeOfDay } from './use-now'
 
 type MealEntry = {
@@ -130,8 +131,34 @@ export function MealTabs() {
 
   const totalCalories = entries.reduce((sum, e) => sum + (e.estimatedCalories ?? 0), 0)
 
+  // Nutrition config awareness
+  const [nutritionConfig] = useState(getNutritionConfig)
+  const hasFasting = nutritionConfig.fasting !== 'none'
+  const windowOpen = hasFasting ? isInEatingWindow(nutritionConfig) : true
+  const untilWindow = hasFasting && !windowOpen ? timeUntilWindow(nutritionConfig) : ''
+  const calorieTarget = nutritionConfig.calorieTarget
+
   return (
     <div className="grid gap-3">
+      {/* Fasting window status */}
+      {hasFasting && (
+        <div className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm ${
+          windowOpen
+            ? 'bg-green-500/10 text-green-700 dark:text-green-400'
+            : 'bg-orange-500/10 text-orange-700 dark:text-orange-400'
+        }`}>
+          <Timer className="size-4" />
+          {windowOpen ? (
+            <span>
+              Eating window open — closes at {formatTime12(nutritionConfig.fastingWindowEnd)}
+            </span>
+          ) : (
+            <span>
+              Fasting — window opens in {untilWindow}
+            </span>
+          )}
+        </div>
+      )}
       {/* Quick-add from recent meals */}
       {recentMeals.length > 0 && (
         <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
@@ -173,11 +200,27 @@ export function MealTabs() {
         {error && <p className="text-xs text-destructive">{error}</p>}
       </div>
 
-      {/* Today's calorie total */}
-      {totalCalories > 0 && (
-        <div className="flex items-center gap-2 rounded-lg bg-primary/10 px-3 py-2">
-          <span className="font-mono text-sm font-medium text-primary">~{totalCalories} kcal</span>
-          <span className="text-xs text-muted-foreground">today</span>
+      {/* Calorie tracking */}
+      {(totalCalories > 0 || calorieTarget > 0) && (
+        <div className="rounded-lg bg-primary/10 px-3 py-2">
+          <div className="flex items-center justify-between">
+            <span className="font-mono text-sm font-medium text-primary">
+              ~{totalCalories} kcal
+            </span>
+            {calorieTarget > 0 && (
+              <span className="text-xs text-muted-foreground">
+                / {calorieTarget} target
+              </span>
+            )}
+          </div>
+          {calorieTarget > 0 && (
+            <div className="mt-1.5 h-1.5 rounded-full bg-primary/20 overflow-hidden">
+              <div
+                className="h-full rounded-full bg-primary transition-all"
+                style={{ width: `${Math.min((totalCalories / calorieTarget) * 100, 100)}%` }}
+              />
+            </div>
+          )}
         </div>
       )}
 
