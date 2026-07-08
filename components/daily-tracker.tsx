@@ -22,6 +22,7 @@ import { StreakCounter } from './tracker/streak-counter'
 import { SupplementManager } from './tracker/supplement-tracker'
 import { ThemeToggle } from './tracker/theme-toggle'
 import { WeeklyView } from './tracker/weekly-view'
+import { WorkoutSetup } from './tracker/workout-setup'
 import { formatTimeOfDay, useNow } from './tracker/use-now'
 
 // Color classes for tag badges in the header
@@ -125,6 +126,7 @@ export function DailyTracker() {
           </a>
           <RecurringTasksManager />
           <CalendarTagsManager />
+          <WorkoutSetup />
           <SupplementManager />
           <DataManager />
           <NotificationSettings />
