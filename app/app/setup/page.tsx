@@ -38,6 +38,7 @@ export default function SetupPage() {
   const [aiLoading, setAiLoading] = useState(false)
   const [aiError, setAiError] = useState('')
   const [showAiBuilder, setShowAiBuilder] = useState(false)
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
 
   useEffect(() => {
     if (!hasScheduleConfig()) {
@@ -81,6 +82,7 @@ export default function SetupPage() {
         [activeTab]: blocks,
       }))
       setShowAiBuilder(false)
+      setHasUnsavedChanges(true)
     } catch (err) {
       setAiError(err instanceof Error ? err.message : 'Something went wrong')
     } finally {
@@ -95,6 +97,7 @@ export default function SetupPage() {
       ...prev,
       [activeTab]: blocks,
     }))
+    setHasUnsavedChanges(true)
   }
 
   function addBlock(blockType: BlockType) {
@@ -157,6 +160,7 @@ export default function SetupPage() {
 
   function handleSave() {
     setScheduleConfig(config)
+    setHasUnsavedChanges(false)
     router.push('/app')
   }
 
@@ -371,13 +375,36 @@ export default function SetupPage() {
         </div>
       </div>
 
-      {/* Save */}
-      <div className="sticky bottom-4 flex justify-end">
-        <Button size="lg" onClick={handleSave}>
-          <Save className="size-4" />
-          Save Schedule
-        </Button>
-      </div>
+      {/* Save — prominent banner when unsaved */}
+      {hasUnsavedChanges && (
+        <div className="fixed inset-x-0 bottom-0 z-50 border-t border-primary/30 bg-background/95 backdrop-blur-lg shadow-[0_-4px_20px_rgba(0,0,0,0.15)]">
+          <div className="mx-auto flex max-w-2xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
+            <div className="flex items-center gap-3">
+              <div className="flex size-8 items-center justify-center rounded-full bg-primary/15">
+                <Save className="size-4 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-foreground">Unsaved changes</p>
+                <p className="text-xs text-muted-foreground">Review your schedule above, then save to apply.</p>
+              </div>
+            </div>
+            <Button size="lg" onClick={handleSave} className="shrink-0 shadow-md shadow-primary/20">
+              <Save className="size-4" />
+              Save Schedule
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Save — subtle when no changes */}
+      {!hasUnsavedChanges && (config.weekday.length > 0 || config.weekend.length > 0) && (
+        <div className="sticky bottom-4 flex justify-end">
+          <Button size="lg" variant="outline" onClick={handleSave}>
+            <Save className="size-4" />
+            Save Schedule
+          </Button>
+        </div>
+      )}
     </main>
   )
 }
