@@ -329,12 +329,12 @@ export const TEMPLATES: Record<string, WorkoutTemplate> = {
 }
 
 export function getWorkoutConfig(): WorkoutConfig {
-  if (typeof window === 'undefined') return { routines: PUSH_PULL_TEMPLATE }
+  if (typeof window === 'undefined') return { routines: [] }
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (raw) return JSON.parse(raw)
   } catch {}
-  return { routines: PUSH_PULL_TEMPLATE }
+  return { routines: [] }
 }
 
 export function setWorkoutConfig(config: WorkoutConfig) {

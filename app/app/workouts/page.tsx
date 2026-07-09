@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import Link from 'next/link'
 import {
   ArrowLeft, ArrowDown, ArrowUp, Calendar, Check, ChevronRight,
-  Clock, Dumbbell, Flame, Heart, Library, ListChecks, Plus,
+  Clock, Dumbbell, Flame, Heart, Library, ListChecks, Loader2, Plus,
   Search, Sparkles, Timer, Trash2, X, Zap, Play, RotateCcw,
   Target, Trophy, ChevronDown
 } from 'lucide-react'
@@ -34,7 +34,7 @@ function estimateDuration(exercises: WorkoutExercise[]): string {
   return `~${Math.round(mins / 5) * 5} min`
 }
 
-type View = 'home' | 'routine-detail' | 'create' | 'templates' | 'library'
+type View = 'home' | 'routine-detail' | 'create' | 'templates' | 'library' | 'ai-builder'
 
 export default function WorkoutsPage() {
   const [config, setConfig] = useState<WorkoutConfig>({ routines: [] })
@@ -102,6 +102,13 @@ export default function WorkoutsPage() {
       )}
       {view === 'library' && (
         <ExerciseLibraryView onBack={() => setView('home')} />
+      )}
+      {view === 'ai-builder' && (
+        <AiWorkoutBuilder
+          config={config}
+          persist={persist}
+          onBack={() => setView('home')}
+        />
       )}
     </div>
   )
@@ -223,24 +230,34 @@ function HomeView({
         </section>
 
         {/* Quick Actions */}
-        <section className="mb-8 grid grid-cols-3 gap-2">
+        <section className="mb-8 grid grid-cols-4 gap-2">
+          <button
+            type="button"
+            onClick={() => onNavigate('ai-builder')}
+            className="flex flex-col items-center gap-2 rounded-xl border border-primary/30 bg-primary/5 p-3 transition-colors hover:bg-primary/10"
+          >
+            <div className="flex size-9 items-center justify-center rounded-lg bg-primary/15 text-primary">
+              <Sparkles className="size-4" />
+            </div>
+            <span className="text-[0.65rem] font-medium text-primary">AI Build</span>
+          </button>
           <button
             type="button"
             onClick={() => onNavigate('create')}
             className="flex flex-col items-center gap-2 rounded-xl border border-border/60 bg-secondary/30 p-3 transition-colors hover:bg-secondary/60"
           >
-            <div className="flex size-9 items-center justify-center rounded-lg bg-primary/15 text-primary">
+            <div className="flex size-9 items-center justify-center rounded-lg bg-secondary text-muted-foreground">
               <Plus className="size-4" />
             </div>
-            <span className="text-[0.65rem] font-medium text-foreground">New Routine</span>
+            <span className="text-[0.65rem] font-medium text-foreground">Manual</span>
           </button>
           <button
             type="button"
             onClick={() => onNavigate('templates')}
             className="flex flex-col items-center gap-2 rounded-xl border border-border/60 bg-secondary/30 p-3 transition-colors hover:bg-secondary/60"
           >
-            <div className="flex size-9 items-center justify-center rounded-lg bg-chart-2/15 text-chart-2">
-              <Sparkles className="size-4" />
+            <div className="flex size-9 items-center justify-center rounded-lg bg-secondary text-muted-foreground">
+              <Trophy className="size-4" />
             </div>
             <span className="text-[0.65rem] font-medium text-foreground">Templates</span>
           </button>
@@ -249,7 +266,7 @@ function HomeView({
             onClick={() => onNavigate('library')}
             className="flex flex-col items-center gap-2 rounded-xl border border-border/60 bg-secondary/30 p-3 transition-colors hover:bg-secondary/60"
           >
-            <div className="flex size-9 items-center justify-center rounded-lg bg-chart-3/15 text-chart-3">
+            <div className="flex size-9 items-center justify-center rounded-lg bg-secondary text-muted-foreground">
               <Library className="size-4" />
             </div>
             <span className="text-[0.65rem] font-medium text-foreground">Exercises</span>
@@ -1117,6 +1134,175 @@ function InlineExerciseLibrary({
         )}
         {filtered.length === 0 && (
           <p className="py-4 text-center text-xs text-muted-foreground">No exercises found</p>
+        )}
+      </div>
+    </div>
+  )
+}
+
+
+/* ─── AI Workout Builder ─── */
+function AiWorkoutBuilder({
+  config, persist, onBack
+}: {
+  config: WorkoutConfig
+  persist: (c: WorkoutConfig) => void
+  onBack: () => void
+}) {
+  const [prompt, setPrompt] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [preview, setPreview] = useState<WorkoutRoutine[] | null>(null)
+
+  const handleBuild = async () => {
+    if (!prompt.trim()) return
+    setLoading(true)
+    setError('')
+    setPreview(null)
+
+    try {
+      const res = await fetch('/api/workout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ description: prompt }),
+      })
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || 'Failed to build program')
+      }
+      const data = await res.json()
+
+      // Convert AI output to WorkoutRoutine format
+      const routines: WorkoutRoutine[] = (data.routines || []).map(
+        (r: { name: string; days: number[]; exercises: { name: string; sets: string }[] }, i: number) => ({
+          id: generateId(),
+          name: r.name,
+          days: r.days,
+          exercises: r.exercises.map((e, j) => ({
+            id: `ai-${i}-${j}-${Date.now()}`,
+            name: e.name,
+            sets: e.sets,
+          })),
+        })
+      )
+
+      setPreview(routines)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleApply = () => {
+    if (!preview) return
+    persist({ routines: preview })
+    onBack()
+  }
+
+  return (
+    <div className="pb-8">
+      <header className="sticky top-0 z-20 border-b border-border/40 bg-background/80 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-3">
+          <button
+            type="button"
+            onClick={onBack}
+            className="flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <ArrowLeft className="size-4" />
+            Back
+          </button>
+          <h1 className="text-sm font-semibold text-foreground">AI Workout Builder</h1>
+          <div className="w-14" />
+        </div>
+      </header>
+
+      <div className="mx-auto max-w-lg px-4 pt-6">
+        <div className="mb-2 flex items-center gap-2">
+          <Sparkles className="size-5 text-primary" />
+          <h2 className="text-lg font-bold text-foreground">Build Your Program</h2>
+        </div>
+        <p className="mb-6 text-sm text-muted-foreground">
+          Tell me about your goals, equipment, experience, and schedule. I&apos;ll design a program for you.
+        </p>
+
+        <textarea
+          value={prompt}
+          onChange={(e) => setPrompt(e.target.value)}
+          disabled={loading}
+          rows={6}
+          placeholder={"e.g. I have dumbbells at home. I want to train Monday through Friday, about 20-30 minutes. MWF should focus on pushing and legs, Tuesday/Thursday should be pulling and arms. I'm intermediate level."}
+          className="mb-4 w-full resize-none rounded-xl border border-border bg-secondary/30 px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/60 disabled:opacity-60"
+        />
+
+        {error && <p className="mb-4 text-sm text-destructive">{error}</p>}
+
+        {!preview && (
+          <Button onClick={handleBuild} disabled={loading || !prompt.trim()} className="w-full" size="lg">
+            {loading ? (
+              <>
+                <Loader2 className="size-4 animate-spin" />
+                Designing your program...
+              </>
+            ) : (
+              <>
+                <Sparkles className="size-4" />
+                Build My Program
+              </>
+            )}
+          </Button>
+        )}
+
+        {/* Preview */}
+        {preview && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Check className="size-5 text-primary" />
+              <h3 className="text-sm font-semibold text-foreground">
+                Program Ready — {preview.length} {preview.length === 1 ? 'routine' : 'routines'}
+              </h3>
+            </div>
+
+            {preview.map((routine) => (
+              <div key={routine.id} className="rounded-xl border border-border/60 bg-secondary/20 p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="text-sm font-semibold text-foreground">{routine.name}</h4>
+                  <div className="flex gap-1">
+                    {routine.days.map((d) => (
+                      <span key={d} className="flex size-6 items-center justify-center rounded bg-primary/20 text-[0.55rem] font-medium text-primary">
+                        {DAY_LABELS[d]}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <ul className="space-y-1">
+                  {routine.exercises.map((ex, i) => (
+                    <li key={ex.id} className="flex items-center justify-between text-sm">
+                      <span className="flex items-center gap-2 text-foreground">
+                        <span className="flex size-5 items-center justify-center rounded bg-primary/10 text-[0.6rem] font-bold text-primary">{i + 1}</span>
+                        {ex.name}
+                      </span>
+                      <span className="font-mono text-xs text-muted-foreground">{ex.sets}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+
+            <div className="flex gap-3 pt-2">
+              <Button onClick={handleApply} className="flex-1" size="lg">
+                <Check className="size-4" />
+                Use This Program
+              </Button>
+              <Button variant="outline" onClick={() => setPreview(null)} size="lg">
+                Try Again
+              </Button>
+            </div>
+
+            <p className="text-center text-xs text-muted-foreground">
+              This will replace your current routines. You can edit everything after applying.
+            </p>
+          </div>
         )}
       </div>
     </div>
