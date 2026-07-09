@@ -45,12 +45,12 @@ const DEFAULT_WEEKEND: ScheduleBlock[] = [
 ]
 
 export function getScheduleConfig(): ScheduleConfig {
-  if (typeof window === 'undefined') return { weekday: DEFAULT_WEEKDAY, weekend: DEFAULT_WEEKEND }
+  if (typeof window === 'undefined') return { weekday: [], weekend: [] }
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (raw) return JSON.parse(raw)
   } catch {}
-  return { weekday: DEFAULT_WEEKDAY, weekend: DEFAULT_WEEKEND }
+  return { weekday: [], weekend: [] }
 }
 
 export function setScheduleConfig(config: ScheduleConfig) {
@@ -63,5 +63,3 @@ export function hasScheduleConfig(): boolean {
   if (typeof window === 'undefined') return false
   return localStorage.getItem(STORAGE_KEY) !== null
 }
-
-export { DEFAULT_WEEKDAY, DEFAULT_WEEKEND }
