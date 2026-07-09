@@ -1153,18 +1153,28 @@ function AiWorkoutBuilder({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [preview, setPreview] = useState<WorkoutRoutine[] | null>(null)
+  const [refinement, setRefinement] = useState('')
 
-  const handleBuild = async () => {
-    if (!prompt.trim()) return
+  const buildProgram = async (description: string, currentProgram?: WorkoutRoutine[]) => {
     setLoading(true)
     setError('')
-    setPreview(null)
+
+    const body: Record<string, unknown> = { description }
+    if (currentProgram && currentProgram.length > 0) {
+      body.currentProgram = {
+        routines: currentProgram.map((r) => ({
+          name: r.name,
+          days: r.days,
+          exercises: r.exercises.map((e) => ({ name: e.name, sets: e.sets })),
+        })),
+      }
+    }
 
     try {
       const res = await fetch('/api/workout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ description: prompt }),
+        body: JSON.stringify(body),
       })
       if (!res.ok) {
         const data = await res.json()
@@ -1172,7 +1182,6 @@ function AiWorkoutBuilder({
       }
       const data = await res.json()
 
-      // Convert AI output to WorkoutRoutine format
       const routines: WorkoutRoutine[] = (data.routines || []).map(
         (r: { name: string; days: number[]; exercises: { name: string; sets: string }[] }, i: number) => ({
           id: generateId(),
@@ -1187,12 +1196,16 @@ function AiWorkoutBuilder({
       )
 
       setPreview(routines)
+      setRefinement('')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong')
     } finally {
       setLoading(false)
     }
   }
+
+  const handleBuild = () => buildProgram(prompt)
+  const handleRefine = () => buildProgram(refinement, preview ?? undefined)
 
   const handleApply = () => {
     if (!preview) return
@@ -1295,12 +1308,32 @@ function AiWorkoutBuilder({
                 Use This Program
               </Button>
               <Button variant="outline" onClick={() => setPreview(null)} size="lg">
-                Try Again
+                Start Over
               </Button>
             </div>
 
+            {/* Refinement input */}
+            <div className="rounded-xl border border-border/60 bg-secondary/20 p-4">
+              <p className="mb-2 text-xs font-medium text-muted-foreground">
+                Want to change something? Tell me what to adjust.
+              </p>
+              <div className="flex gap-2">
+                <input
+                  value={refinement}
+                  onChange={(e) => setRefinement(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && refinement.trim() && handleRefine()}
+                  disabled={loading}
+                  placeholder="e.g. Swap tricep exercises for more shoulder work"
+                  className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/60 disabled:opacity-60"
+                />
+                <Button size="sm" onClick={handleRefine} disabled={loading || !refinement.trim()}>
+                  {loading ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
+                </Button>
+              </div>
+            </div>
+
             <p className="text-center text-xs text-muted-foreground">
-              This will replace your current routines. You can edit everything after applying.
+              This will replace your current routines. You can also edit manually after applying.
             </p>
           </div>
         )}

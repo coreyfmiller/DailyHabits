@@ -35,10 +35,24 @@ Rules:
 12. If the user mentions a time constraint (e.g. "20 minutes"), keep exercise count appropriate.`
 
 export async function POST(req: Request) {
-  const { description } = (await req.json()) as { description?: string }
+  const { description, currentProgram } = (await req.json()) as {
+    description?: string
+    currentProgram?: { routines: { name: string; days: number[]; exercises: { name: string; sets: string }[] }[] }
+  }
 
   if (!description || !description.trim()) {
     return Response.json({ error: 'Description is required' }, { status: 400 })
+  }
+
+  let contextPrompt: string
+  if (currentProgram && currentProgram.routines.length > 0) {
+    const programSummary = currentProgram.routines.map((r) =>
+      `- ${r.name} (${r.days.map(d => ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d]).join(', ')}): ${r.exercises.map(e => `${e.name} ${e.sets}`).join(', ')}`
+    ).join('\n')
+
+    contextPrompt = `The user has an existing program:\n\n${programSummary}\n\nThey want to modify it. Here's their request:\n\n"${description}"\n\nKeep what works, change what they asked for. Return the full updated program.`
+  } else {
+    contextPrompt = `Here's what the user wants for their workout program:\n\n"${description}"\n\nDesign their optimal training program.`
   }
 
   try {
@@ -46,7 +60,7 @@ export async function POST(req: Request) {
       model: 'openai/gpt-5.4-mini',
       output: Output.object({ schema: workoutProgramSchema }),
       system: SYSTEM_PROMPT,
-      prompt: `Here's what the user wants for their workout program:\n\n"${description}"\n\nDesign their optimal training program.`,
+      prompt: contextPrompt,
     })
 
     return Response.json(output)
