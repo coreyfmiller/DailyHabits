@@ -31,8 +31,8 @@ function migrateScheduleBlocks() {
 
       const original = config[key].length
 
-      // Replace deprecated block IDs
-      config[key] = config[key].map((block: { blockTypeId: string; [k: string]: unknown }) => {
+      // Replace deprecated block IDs and fix mislabeled meals blocks
+      config[key] = config[key].map((block: { blockTypeId: string; label?: string; startTime?: string; endTime?: string; [k: string]: unknown }) => {
         if (block.blockTypeId === 'personal-work') {
           block.blockTypeId = 'work'
           changed = true
@@ -44,6 +44,24 @@ function migrateScheduleBlocks() {
         if (block.blockTypeId === 'lunch-break') {
           block.blockTypeId = 'meals'
           changed = true
+        }
+        // Fix meals blocks that were given a single-meal label and narrow time window
+        if (block.blockTypeId === 'meals') {
+          const narrowLabels = ['breakfast', 'lunch', 'supper', 'dinner', 'brunch']
+          if (block.label && narrowLabels.includes(block.label.toLowerCase())) {
+            block.label = 'Meals'
+            changed = true
+          }
+          // Widen time window if it's too narrow (less than 2 hours)
+          if (block.startTime && block.endTime) {
+            const [sh, sm] = (block.startTime as string).split(':').map(Number)
+            const [eh, em] = (block.endTime as string).split(':').map(Number)
+            const duration = (eh * 60 + em) - (sh * 60 + sm)
+            if (duration < 120) {
+              block.endTime = '21:00'
+              changed = true
+            }
+          }
         }
         return block
       })

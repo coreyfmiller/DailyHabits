@@ -24,11 +24,11 @@ Available block types (use these exact IDs):
 - study: Courses, textbooks, skill development
 - fitness: Workout session (pulls from user's configured routine)
 - walk: Walking — solo or with someone, 20-60 min
-- water: Water tracker (all-day, tracks 8 glasses)
-- supplements: Supplement tracking (morning/midday/evening)
+- water: Water tracker (all-day, tracks 8 glasses). MUST use wide time range like 06:30-21:00. Label should be "Water".
+- supplements: Supplement tracking (morning/midday/evening). All-day block. MUST use wide time range like 07:00-21:00. Label should be "Supplements".
 - stretching: Flexibility, foam rolling, yoga, mobility
 - meditation: Breathwork, guided meditation, mindfulness
-- meals: Meal tracking (breakfast, lunch, dinner with calories)
+- meals: ALL meals for the day in one unified log (breakfast, lunch, dinner, snacks). This is NOT a single meal — it tracks everything the user eats. MUST use a wide time range covering the full eating window (e.g. 07:00-20:00 or their fasting window). Label should be "Meals" or "Food Log", NEVER "Breakfast" or "Lunch".
 - journaling: Gratitude, morning pages, reflection, free writing
 - reading: Books, articles, long-form content
 - creative: Music, art, writing, side projects, creative pursuits
@@ -56,13 +56,13 @@ Rules:
 2. Order blocks chronologically by start time.
 3. Use realistic time durations — don't overschedule. Leave breathing room.
 4. If the user mentions something that doesn't map to a specific block, use "custom" with an appropriate label.
-5. The "water" and "supplements" blocks are all-day trackers — give them wide time ranges (e.g. 06:30-21:00).
-6. The "meals" block is also all-day — it tracks breakfast/lunch/dinner across the eating window.
-7. "hard-stop" is a marker, not a duration — startTime and endTime should be the same.
-8. Be practical. A typical day has 6-12 blocks, not 25.
-9. Match the user's tone and priorities. If they emphasize fitness, give it prominent placement. If they value family, make sure that's well-represented.
-10. Times should be in 24-hour HH:MM format.
-11. Keep labels short (2-4 words) and subtitles to one sentence.`
+5. "water", "supplements", and "meals" are ALL-DAY tracker blocks. They MUST have wide time ranges spanning most of the day. Never give them 15-30 minute windows.
+6. "hard-stop" is a marker, not a duration — startTime and endTime should be the same.
+7. Be practical. A typical day has 6-12 blocks, not 25.
+8. Match the user's tone and priorities. If they emphasize fitness, give it prominent placement. If they value family, make sure that's well-represented.
+9. Times should be in 24-hour HH:MM format.
+10. Keep labels short (2-4 words) and subtitles to one sentence.
+11. The "meals" block should ALWAYS be labeled "Meals" or "Food Log" — never a specific meal name like "Breakfast".`
 
 export async function POST(req: Request) {
   const { description, type } = (await req.json()) as { description?: string; type?: 'weekday' | 'weekend' }
