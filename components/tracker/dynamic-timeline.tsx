@@ -126,10 +126,16 @@ export function DynamicTimeline({ schedule }: { schedule: ScheduleBlock[] }) {
         const isLast = index === schedule.length - 1
 
         // Determine status
+        // All-day tracker blocks (meals, water, supplements) are always active
+        const alwaysActive = ['MealTabs', 'WaterTracker', 'Supplements'].includes(blockType.component)
         let status: 'past' | 'active' | 'future' = 'future'
-        const effectiveEnd = startMin === endMin ? endMin + 1 : endMin
-        if (minutesNow >= effectiveEnd) status = 'past'
-        else if (minutesNow >= startMin) status = 'active'
+        if (alwaysActive) {
+          status = 'active'
+        } else {
+          const effectiveEnd = startMin === endMin ? endMin + 1 : endMin
+          if (minutesNow >= effectiveEnd) status = 'past'
+          else if (minutesNow >= startMin) status = 'active'
+        }
 
         // Determine accent
         const accent = blockType.component === 'HardStop' ? 'destructive' : 'primary'
