@@ -37,6 +37,7 @@ import type { LucideIcon } from 'lucide-react'
 
 import { useLocalStorage } from '@/lib/use-local-storage'
 import { getBlockType } from '@/lib/block-registry'
+import { getNutritionConfig, formatTime12 } from '@/lib/nutrition-config'
 import type { ScheduleBlock } from '@/lib/schedule-config'
 
 import { EveningWalk } from './evening-walk'
@@ -113,6 +114,7 @@ export function DynamicTimeline({ schedule }: { schedule: ScheduleBlock[] }) {
 
   const [shower, setShower] = useLocalStorage('shower', false)
   const [coffee, setCoffee] = useLocalStorage('coffee', false)
+  const nutritionConfig = getNutritionConfig()
 
   return (
     <section aria-label="Daily timeline">
@@ -140,7 +142,18 @@ export function DynamicTimeline({ schedule }: { schedule: ScheduleBlock[] }) {
         // Determine accent
         const accent = blockType.component === 'HardStop' ? 'destructive' : 'primary'
 
-        const timeLabel = formatTimeRange(block.startTime, block.endTime)
+        // For all-day tracker blocks, don't show a time range — it's misleading
+        // Exception: if user has fasting configured, meals shows the eating window
+        let timeLabel: string
+        if (alwaysActive) {
+          if (blockType.component === 'MealTabs' && nutritionConfig.fasting !== 'none') {
+            timeLabel = `${formatTime12(nutritionConfig.fastingWindowStart)} – ${formatTime12(nutritionConfig.fastingWindowEnd)}`
+          } else {
+            timeLabel = 'All day'
+          }
+        } else {
+          timeLabel = formatTimeRange(block.startTime, block.endTime)
+        }
 
         return (
           <TimelineRow
