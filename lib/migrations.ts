@@ -9,24 +9,14 @@ export function runMigrations() {
 
   migrateScheduleBlocks()
   migrateMealData()
-  markMigrated()
-}
-
-const MIGRATION_KEY = 'migrations-v1'
-
-function hasMigrated(): boolean {
-  return localStorage.getItem(MIGRATION_KEY) === 'done'
-}
-
-function markMigrated() {
-  localStorage.setItem(MIGRATION_KEY, 'done')
 }
 
 /**
  * Migrate old schedule blocks:
  * - Remove supplements-midday / supplements-evening (replaced by unified "supplements")
- * - Remove personal-work (replaced by "work" or "deep-work")
- * - Ensure only one "meals" block exists (remove duplicates from old breakfast/lunch/supper separation)
+ * - Remove personal-work (replaced by "work" or "deep-work")  
+ * - Remove lunch-break (redundant with meals)
+ * - Ensure only one "meals" and one "supplements" block exists
  */
 function migrateScheduleBlocks() {
   const raw = localStorage.getItem('schedule-config')
@@ -43,14 +33,16 @@ function migrateScheduleBlocks() {
 
       // Replace deprecated block IDs
       config[key] = config[key].map((block: { blockTypeId: string; [k: string]: unknown }) => {
-        // Convert personal-work to work
         if (block.blockTypeId === 'personal-work') {
           block.blockTypeId = 'work'
           changed = true
         }
-        // Convert supplements-midday/evening to unified supplements
         if (block.blockTypeId === 'supplements-midday' || block.blockTypeId === 'supplements-evening') {
           block.blockTypeId = 'supplements'
+          changed = true
+        }
+        if (block.blockTypeId === 'lunch-break') {
+          block.blockTypeId = 'meals'
           changed = true
         }
         return block
