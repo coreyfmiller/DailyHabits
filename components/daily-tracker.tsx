@@ -12,6 +12,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { getScheduleConfig, hasScheduleConfig } from '@/lib/schedule-config'
+import { runMigrations } from '@/lib/migrations'
 import { CalendarView } from './tracker/calendar-view'
 import { CalendarTagsManager, getTagsForToday } from './tracker/calendar-tags'
 import { CalorieCounter } from './tracker/calorie-counter'
@@ -45,6 +46,7 @@ export function DailyTracker() {
   const [ready, setReady] = useState(false)
 
   useEffect(() => {
+    runMigrations()
     if (!hasScheduleConfig()) {
       router.replace('/app/setup')
     } else {
