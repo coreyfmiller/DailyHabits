@@ -27,7 +27,8 @@ export function TimelineRow({
   headerRight?: ReactNode
   children?: ReactNode
 }) {
-  const [collapsed, setCollapsed] = useState(false)
+  // Past blocks start collapsed, active/future start expanded
+  const [collapsed, setCollapsed] = useState(status === 'past')
 
   const isPast = status === 'past'
   const isActive = status === 'active'

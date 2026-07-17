@@ -6,24 +6,26 @@ import { cn } from '@/lib/utils'
 type MealEntry = { id: number }
 
 export function DailyProgress() {
-  const [coffee] = useLocalStorage<boolean>('coffee', false)
-  const [shower] = useLocalStorage<boolean>('shower', false)
-  const [breakfast] = useLocalStorage<MealEntry[]>('meals-breakfast', [])
-  const [lunch] = useLocalStorage<MealEntry[]>('meals-lunch', [])
-  const [supper] = useLocalStorage<MealEntry[]>('meals-supper', [])
-  const [walkedFamily] = useLocalStorage<boolean>('walked-with-family', false)
-  const [soloWalk] = useLocalStorage<boolean>('solo-walk', false)
-  const [routine] = useLocalStorage<{ done: boolean }[]>('dumbbell-routine', [])
+  const [meals] = useLocalStorage<MealEntry[]>('meals', [])
+  const [walked] = useLocalStorage<boolean>('walk-done', false)
+  const [waterGlasses] = useLocalStorage<number>('water-glasses', 0)
+  const [routineChecked] = useLocalStorage<string[]>('routine-checked', [])
 
-  const habits = [
-    coffee,
-    shower,
-    breakfast.length > 0,
-    lunch.length > 0,
-    supper.length > 0,
-    routine.some((e) => e.done),
-    walkedFamily || soloWalk,
-  ]
+  // Dynamic progress based on what the user actually has
+  const habits: boolean[] = []
+
+  // Meals (at least one logged)
+  if (meals.length > 0) habits.push(true)
+  else habits.push(false)
+
+  // Walk
+  habits.push(walked)
+
+  // Water (at least 4 glasses)
+  habits.push(waterGlasses >= 4)
+
+  // Morning routine (at least one item checked)
+  habits.push(routineChecked.length > 0)
 
   const done = habits.filter(Boolean).length
   const total = habits.length

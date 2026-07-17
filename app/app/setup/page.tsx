@@ -215,6 +215,64 @@ export default function SetupPage() {
               ? 'Describe your typical weekday — work, habits, goals, and priorities.'
               : 'Describe your ideal weekend — how you rest, recharge, and spend your time off.'}
           </p>
+
+          {/* Guided prompt chips */}
+          {activeTab === 'weekday' && !aiPrompt && (
+            <div className="mb-3">
+              <p className="text-xs text-muted-foreground mb-2">Tap to add to your description:</p>
+              <div className="flex flex-wrap gap-1.5">
+                {[
+                  'I wake up at 6:30',
+                  'I work 9-5',
+                  'I have a 30 min commute',
+                  'I want to work out',
+                  'I do intermittent fasting',
+                  'I want family time in the evening',
+                  'I meditate',
+                  'I read before bed',
+                  'I have a side project',
+                  'I walk daily',
+                ].map((chip) => (
+                  <button
+                    key={chip}
+                    type="button"
+                    onClick={() => setAiPrompt((prev) => prev ? `${prev}. ${chip}` : chip)}
+                    className="rounded-full border border-border/60 bg-secondary/50 px-2.5 py-1 text-xs text-foreground transition-colors hover:bg-primary/10 hover:border-primary/30"
+                  >
+                    + {chip}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          {activeTab === 'weekend' && !aiWeekendPrompt && (
+            <div className="mb-3">
+              <p className="text-xs text-muted-foreground mb-2">Tap to add to your description:</p>
+              <div className="flex flex-wrap gap-1.5">
+                {[
+                  'I sleep in until 8',
+                  'I do meal prep',
+                  'Family activities all day',
+                  'I work on side projects',
+                  'Long walk or hike',
+                  'Movie night',
+                  'Church in the morning',
+                  'Chores and errands',
+                  'No work on weekends',
+                  'Same eating window as weekdays',
+                ].map((chip) => (
+                  <button
+                    key={chip}
+                    type="button"
+                    onClick={() => setAiWeekendPrompt((prev) => prev ? `${prev}. ${chip}` : chip)}
+                    className="rounded-full border border-border/60 bg-secondary/50 px-2.5 py-1 text-xs text-foreground transition-colors hover:bg-primary/10 hover:border-primary/30"
+                  >
+                    + {chip}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
           <textarea
             value={activeTab === 'weekday' ? aiPrompt : aiWeekendPrompt}
             onChange={(e) => activeTab === 'weekday' ? setAiPrompt(e.target.value) : setAiWeekendPrompt(e.target.value)}

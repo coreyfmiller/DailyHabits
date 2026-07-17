@@ -25,6 +25,7 @@ import { StreakCounter } from './tracker/streak-counter'
 import { SupplementManager } from './tracker/supplement-tracker'
 import { NutritionSettings } from './tracker/nutrition-settings'
 import { NutritionDashboard } from './tracker/nutrition-dashboard'
+import { WeeklyHeatmap } from './tracker/weekly-heatmap'
 import { ThemeToggle } from './tracker/theme-toggle'
 import { WeeklyView } from './tracker/weekly-view'
 import { WorkoutSetup } from './tracker/workout-setup'
@@ -163,6 +164,7 @@ export function DailyTracker() {
       ) : (
         <>
           <NutritionDashboard />
+          <WeeklyHeatmap />
           <DynamicTimeline schedule={activeSchedule} />
         </>
       )}

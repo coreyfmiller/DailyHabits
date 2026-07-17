@@ -1,11 +1,12 @@
 'use client'
 
-import { Check, Dumbbell, Plus, Timer, X } from 'lucide-react'
+import { Check, Dumbbell, Play, Plus, Timer, X } from 'lucide-react'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { useLocalStorage } from '@/lib/use-local-storage'
 import { getTodayRoutine } from '@/lib/workout-config'
 import { HabitCheckbox } from './primitives'
+import { ActiveWorkout } from './active-workout'
 
 type Lift = { id: number; text: string }
 
@@ -117,6 +118,21 @@ export function FitnessSection({
 
   // Active workout day
   const daysList = routine.days.map((d) => DAY_LABELS[d]).join(' · ')
+  const [activeMode, setActiveMode] = useState(false)
+
+  if (activeMode) {
+    return (
+      <ActiveWorkout
+        routineName={routine.name}
+        exercises={exercises.map((e) => ({ ...e, id: e.name }))}
+        onComplete={(results) => {
+          setExercises((prev) => prev.map((e, i) => ({ ...e, done: results[i] })))
+          setActiveMode(false)
+        }}
+        onClose={() => setActiveMode(false)}
+      />
+    )
+  }
 
   return (
     <div className="grid gap-3">
@@ -125,11 +141,19 @@ export function FitnessSection({
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 text-sm font-medium text-foreground">
             <Timer className="size-4 text-primary" />
-            20-Min Dumbbell — {routine.name}
+            {routine.name}
           </div>
-          <span className="rounded-full bg-primary/15 px-2.5 py-0.5 font-mono text-xs text-primary">
-            {completedCount}/{exercises.length}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="rounded-full bg-primary/15 px-2.5 py-0.5 font-mono text-xs text-primary">
+              {completedCount}/{exercises.length}
+            </span>
+            {completedCount < exercises.length && (
+              <Button size="xs" onClick={() => setActiveMode(true)}>
+                <Play className="size-3" />
+                Start
+              </Button>
+            )}
+          </div>
         </div>
         <p className="mt-1 text-xs text-muted-foreground">{daysList}</p>
         <ul className="mt-3 grid gap-1.5">
