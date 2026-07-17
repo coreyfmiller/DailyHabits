@@ -4,12 +4,14 @@ import {
   Calendar,
   Dumbbell,
   LayoutGrid,
+  LineChart,
   Pencil,
   Settings,
   X,
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { getScheduleConfig, hasScheduleConfig } from '@/lib/schedule-config'
 import { runMigrations } from '@/lib/migrations'
@@ -27,6 +29,7 @@ import { NutritionSettings } from './tracker/nutrition-settings'
 import { NutritionDashboard } from './tracker/nutrition-dashboard'
 import { WeeklyHeatmap } from './tracker/weekly-heatmap'
 import { ThemeToggle } from './tracker/theme-toggle'
+import { ShareButton } from './tracker/share-card'
 import { WeeklyView } from './tracker/weekly-view'
 import { WorkoutSetup } from './tracker/workout-setup'
 import { formatTimeOfDay, useNow } from './tracker/use-now'
@@ -102,6 +105,7 @@ export function DailyTracker() {
             <DailyProgress />
             <StreakCounter />
             <CalorieCounter />
+            <ShareButton />
             <ThemeToggle />
             {view !== 'timeline' ? (
               <Button size="sm" variant="default" onClick={() => setView('timeline')}>
@@ -113,6 +117,11 @@ export function DailyTracker() {
                 <Button size="sm" variant="secondary" onClick={() => setView('settings')}>
                   <Settings className="size-4" />
                 </Button>
+                <Link href="/app/insights">
+                  <Button size="sm" variant="secondary">
+                    <LineChart className="size-4" />
+                  </Button>
+                </Link>
                 <Button size="sm" variant="secondary" onClick={() => setView('weekly')}>
                   <LayoutGrid className="size-4" />
                   Week

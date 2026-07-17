@@ -1,12 +1,14 @@
 {
   "name": "RoutinePro.ai",
   "short_name": "RoutinePro",
-  "description": "AI-powered daily routine and habit tracker",
-  "start_url": "/",
+  "description": "AI-powered daily routine and habit tracker. Build your perfect day.",
+  "start_url": "/app",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#141821",
   "theme_color": "#141821",
   "orientation": "portrait",
+  "categories": ["health", "fitness", "productivity", "lifestyle"],
   "icons": [
     {
       "src": "/icon-dark-32x32.png",
@@ -24,5 +26,7 @@
       "type": "image/svg+xml",
       "purpose": "any maskable"
     }
-  ]
+  ],
+  "screenshots": [],
+  "prefer_related_applications": false
 }
