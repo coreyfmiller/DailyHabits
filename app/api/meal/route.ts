@@ -4,7 +4,7 @@ import { z } from 'zod'
 export const maxDuration = 30
 
 const mealSchema = z.object({
-  title: z.string().describe('A short 2-4 word name for the meal'),
+  title: z.string().describe('The full meal description as the user wrote it, just cleaned up slightly (e.g. "3 eggs" stays as "3 Eggs", "grilled chicken with rice" stays as "Grilled Chicken with Rice"). Never shorten or abbreviate.'),
   mealType: z
     .enum(['breakfast', 'lunch', 'dinner', 'snack', 'drink'])
     .describe('The most likely meal category'),

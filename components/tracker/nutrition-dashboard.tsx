@@ -1,7 +1,7 @@
 'use client'
 
-import { ChevronDown, Droplets, Flame, Loader2, Pill, Plus, Sparkles, Timer, Utensils, X } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { Bookmark, ChevronDown, Droplets, Flame, Loader2, Sparkles, Timer, Utensils, X } from 'lucide-react'
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { useLocalStorage } from '@/lib/use-local-storage'
 import { cn } from '@/lib/utils'
@@ -32,34 +32,26 @@ const MEAL_TAG_COLORS: Record<string, string> = {
   drink: 'bg-cyan-500/15 text-cyan-600 dark:text-cyan-400',
 }
 
-function getRecentMeals(): MealEntry[] {
+const SAVED_MEALS_KEY = 'saved-meals'
+
+type SavedMeal = {
+  id: string
+  title: string
+  mealType: string
+  estimatedCalories: number | null
+  items: string[]
+}
+
+function getSavedMeals(): SavedMeal[] {
   if (typeof window === 'undefined') return []
-  const now = new Date()
-  const entries: MealEntry[] = []
-  for (let i = 1; i < 14; i++) {
-    const d = new Date(now)
-    d.setDate(d.getDate() - i)
-    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-    for (const slot of ['meals', 'meals-breakfast', 'meals-lunch', 'meals-supper']) {
-      try {
-        const raw = localStorage.getItem(`daily-habits:${key}:${slot}`)
-        if (raw) {
-          const arr = JSON.parse(raw)
-          if (Array.isArray(arr)) entries.push(...arr)
-        }
-      } catch {}
-    }
-  }
-  const seen = new Set<string>()
-  const unique: MealEntry[] = []
-  for (const entry of entries) {
-    const norm = entry.title?.toLowerCase().trim()
-    if (!norm || seen.has(norm)) continue
-    seen.add(norm)
-    unique.push(entry)
-    if (unique.length >= 5) break
-  }
-  return unique
+  try {
+    const raw = localStorage.getItem(SAVED_MEALS_KEY)
+    return raw ? JSON.parse(raw) : []
+  } catch { return [] }
+}
+
+function setSavedMeals(meals: SavedMeal[]) {
+  try { localStorage.setItem(SAVED_MEALS_KEY, JSON.stringify(meals)) } catch {}
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -70,7 +62,7 @@ export function NutritionDashboard() {
   const [waterGlasses, setWaterGlasses] = useLocalStorage<number>('water-glasses', 0)
   const [description, setDescription] = useState('')
   const [loading, setLoading] = useState(false)
-  const [recentMeals, setRecentMeals] = useState<MealEntry[]>([])
+  const [savedMeals, setSavedMeals] = useState<SavedMeal[]>(getSavedMeals)
 
   const [nutritionConfig] = useState<NutritionConfig>(getNutritionConfig)
   const hasFasting = nutritionConfig.fasting !== 'none'
@@ -80,9 +72,42 @@ export function NutritionDashboard() {
   const totalCalories = entries.reduce((sum, e) => sum + (e.estimatedCalories ?? 0), 0)
   const caloriePercent = calorieTarget > 0 ? Math.min((totalCalories / calorieTarget) * 100, 100) : 0
 
-  useEffect(() => {
-    setRecentMeals(getRecentMeals())
-  }, [])
+  const saveMeal = (entry: MealEntry) => {
+    const saved: SavedMeal = {
+      id: `sm-${Date.now()}`,
+      title: entry.title,
+      mealType: entry.mealType,
+      estimatedCalories: entry.estimatedCalories,
+      items: entry.items,
+    }
+    const updated = [...savedMeals, saved]
+    setSavedMeals(updated)
+    setSavedMeals(updated)
+    setSavedMealsStorage(updated)
+  }
+
+  const removeSavedMeal = (id: string) => {
+    const updated = savedMeals.filter((m) => m.id !== id)
+    setSavedMeals(updated)
+    setSavedMealsStorage(updated)
+  }
+
+  const setSavedMealsStorage = (meals: SavedMeal[]) => {
+    try { localStorage.setItem(SAVED_MEALS_KEY, JSON.stringify(meals)) } catch {}
+  }
+
+  const addFromSaved = (meal: SavedMeal) => {
+    setEntries((prev) => [{
+      id: Date.now(),
+      at: new Date().toISOString(),
+      description: meal.title,
+      title: meal.title,
+      mealType: meal.mealType,
+      items: meal.items,
+      estimatedCalories: meal.estimatedCalories,
+      healthNote: null,
+    }, ...prev])
+  }
 
   // Smart placeholder based on time of day
   const hour = new Date().getHours()
@@ -125,10 +150,6 @@ export function NutritionDashboard() {
     } finally {
       setLoading(false)
     }
-  }
-
-  const addQuickMeal = (meal: MealEntry) => {
-    setEntries((prev) => [{ ...meal, id: Date.now(), at: new Date().toISOString() }, ...prev])
   }
 
   return (
@@ -195,19 +216,23 @@ export function NutritionDashboard() {
             </div>
           )}
 
-          {/* Quick add from recent */}
-          {recentMeals.length > 0 && (
-            <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-              {recentMeals.map((meal) => (
-                <button
-                  key={meal.title}
-                  type="button"
-                  onClick={() => addQuickMeal(meal)}
-                  className="shrink-0 rounded-full border border-border/60 bg-secondary/50 px-2.5 py-1 text-xs text-foreground transition-colors hover:bg-primary/10 hover:border-primary/30"
-                >
-                  {meal.title}
-                </button>
-              ))}
+          {/* Saved meals quick-add */}
+          {savedMeals.length > 0 && (
+            <div>
+              <p className="text-xs font-medium text-muted-foreground mb-1.5">Saved meals</p>
+              <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+                {savedMeals.map((meal) => (
+                  <button
+                    key={meal.id}
+                    type="button"
+                    onClick={() => addFromSaved(meal)}
+                    className="shrink-0 rounded-full border border-border/60 bg-secondary/50 px-2.5 py-1 text-xs text-foreground transition-colors hover:bg-primary/10 hover:border-primary/30"
+                    title={meal.estimatedCalories ? `~${meal.estimatedCalories} kcal` : undefined}
+                  >
+                    {meal.title}
+                  </button>
+                ))}
+              </div>
             </div>
           )}
 
@@ -293,14 +318,27 @@ export function NutritionDashboard() {
                         {entry.estimatedCalories ? ` · ~${entry.estimatedCalories} kcal` : ''}
                       </span>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => setEntries((prev) => prev.filter((e) => e.id !== entry.id))}
-                      className="shrink-0 text-muted-foreground hover:text-destructive transition-colors mt-0.5"
-                      aria-label={`Remove ${entry.title}`}
-                    >
-                      <X className="size-3.5" />
-                    </button>
+                    <div className="flex shrink-0 items-center gap-1 mt-0.5">
+                      {!savedMeals.some((s) => s.title === entry.title) && (
+                        <button
+                          type="button"
+                          onClick={() => saveMeal(entry)}
+                          className="text-muted-foreground hover:text-primary transition-colors"
+                          aria-label={`Save ${entry.title}`}
+                          title="Save as quick-add"
+                        >
+                          <Bookmark className="size-3.5" />
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => setEntries((prev) => prev.filter((e) => e.id !== entry.id))}
+                        className="text-muted-foreground hover:text-destructive transition-colors"
+                        aria-label={`Remove ${entry.title}`}
+                      >
+                        <X className="size-3.5" />
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
