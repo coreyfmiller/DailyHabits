@@ -83,7 +83,7 @@ export function DailyTracker() {
             onClick={() => view !== 'timeline' && setView('timeline')}
             className={view !== 'timeline' ? 'cursor-pointer' : 'cursor-default'}
           >
-            <img src="/darktextlogo.png" alt="RoutinePro.ai" className="h-6 dark:hidden" />
+            <img src="/darklogo.png" alt="RoutinePro.ai" className="h-6 dark:hidden" />
             <img src="/lighttextlogo.png" alt="RoutinePro.ai" className="h-6 hidden dark:block" />
             <p className="text-xs text-muted-foreground text-left">
               {today} · {formatTimeOfDay(now)}
